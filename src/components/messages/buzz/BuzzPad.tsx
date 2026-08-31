@@ -4,6 +4,7 @@ import { Heart } from 'lucide-react'
 import { useCurrentProfile } from '../../../hooks/useCurrentProfile'
 import { messageService } from '../../../services/messageService'
 import { gardenService } from '../../../services/gardenService'
+import { useToast } from '../../../contexts/ToastContext'
 
 export function BuzzPad() {
   const { profile } = useCurrentProfile()
@@ -12,9 +13,8 @@ export function BuzzPad() {
   
   const [cooldown, setCooldown] = useState(0)
   const [isPressing, setIsPressing] = useState(false)
-  const [feedback, setFeedback] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const pulseControls = useAnimationControls()
+  const { success, error: toastError } = useToast()
 
   useEffect(() => {
     // Start pulsing indefinitely
@@ -39,7 +39,6 @@ export function BuzzPad() {
     if (cooldown > 0) return
 
     setIsPressing(true)
-    setError(null)
     
     // Vibrate if supported
     if ('vibrate' in navigator) {
@@ -85,13 +84,12 @@ export function BuzzPad() {
       ).catch(console.error)
       
       setCooldown(1)
-      setFeedback(`${profile.display_name || 'Someone'} misses you 💗`)
-      window.setTimeout(() => setFeedback(null), 2400)
+      success(`${profile.display_name || 'Someone'} misses you 💗`)
       
       // Stop pulsing, animate press down
-      await pulseControls.start({ scale: 0.9, backgroundColor: '#C9798C', transition: { duration: 0.1 } })
+      await pulseControls.start({ scale: 0.9, backgroundColor: '#a35064', transition: { duration: 0.1 } })
       // Animate release
-      await pulseControls.start({ scale: 1, backgroundColor: '#E8A8B8', transition: { duration: 0.2 } })
+      await pulseControls.start({ scale: 1, backgroundColor: '#c86b85', transition: { duration: 0.2 } })
       // Resume pulsing
       pulseControls.start({
         scale: [1, 1.05, 1],
@@ -99,7 +97,7 @@ export function BuzzPad() {
       })
     } catch (e) {
       console.error(e)
-      setError("Couldn't send that buzz yet.")
+      toastError("Couldn't send that buzz yet.")
     } finally {
       setIsPressing(false)
     }
@@ -129,7 +127,7 @@ export function BuzzPad() {
           onTap={handlePress}
           className={`w-56 h-56 rounded-full shadow-2xl shadow-rose-plum/25 flex items-center justify-center relative z-10 border-4 border-rose-plum/20 ${cooldown > 0 ? 'bg-rose-pink/60 cursor-not-allowed opacity-80' : 'bg-rose-plum cursor-pointer'}`}
         >
-          <Heart className={`w-20 h-20 transition-all duration-300 ${isPressing ? 'fill-rose-base text-rose-base scale-90' : 'text-rose-base'}`} strokeWidth={1.5} />
+          <Heart className={`w-20 h-20 transition-all duration-300 ${isPressing ? 'fill-rose-base text-rose-base scale-90' : 'text-white'}`} strokeWidth={1.5} />
           
           {cooldown > 0 && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/10 rounded-full backdrop-blur-[2px]">
@@ -140,8 +138,7 @@ export function BuzzPad() {
       </div>
 
       <div className="min-h-8 text-center" role="status">
-        {feedback && <p className="font-serif text-rose-plum text-lg animate-pulse">{feedback}</p>}
-        {error && <p className="rounded-xl bg-white/70 px-3 py-2 text-sm text-red-700">{error}</p>}
+        {/* Removed local feedback state in favor of ToastContext */}
       </div>
       
     </div>

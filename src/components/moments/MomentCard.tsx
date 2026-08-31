@@ -5,6 +5,7 @@ import { MediaGallery } from './MediaGallery'
 import { CommentsSheet } from './CommentsSheet'
 import { useCurrentProfile } from '../../hooks/useCurrentProfile'
 import { momentService } from '../../services/momentService'
+import { useToast } from '../../contexts/ToastContext'
 
 interface Props {
   moment: Moment
@@ -18,6 +19,7 @@ export function MomentCard({ moment: initialMoment }: Props) {
   const [isLiking, setIsLiking] = useState(false)
 
   const { profile } = useCurrentProfile()
+  const { error } = useToast()
   
   const hasLiked = profile && moment.reactions.some(r => r.authorId === profile.id)
 
@@ -41,6 +43,7 @@ export function MomentCard({ moment: initialMoment }: Props) {
       }
     } catch (err) {
       console.error('Failed to toggle like', err)
+      error('Failed to update like status')
     } finally {
       setIsLiking(false)
     }

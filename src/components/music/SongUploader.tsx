@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { X, Upload, Music, Loader2 } from 'lucide-react'
 import { useCurrentProfile } from '../../hooks/useCurrentProfile'
+import { useToast } from '../../contexts/ToastContext'
 import { musicService } from '../../services/musicService'
 import type { Song } from '../../types/music'
 
@@ -12,6 +13,7 @@ interface Props {
 
 export function SongUploader({ onClose, onSongAdded }: Props) {
   const { profile } = useCurrentProfile()
+  const { success, error: toastError } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [file, setFile] = useState<File | null>(null)
@@ -22,7 +24,6 @@ export function SongUploader({ onClose, onSongAdded }: Props) {
   const [isFavourite, setIsFavourite] = useState(false)
   
   const [isUploading, setIsUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -37,7 +38,6 @@ export function SongUploader({ onClose, onSongAdded }: Props) {
   const handleUpload = async () => {
     if (!file || !title || !artist || !profile?.relationship_id || !profile.id) return
     setIsUploading(true)
-    setError(null)
 
     try {
       const audioUrl = await musicService.uploadSongFile(file, profile.relationship_id, profile.id)
@@ -60,11 +60,12 @@ export function SongUploader({ onClose, onSongAdded }: Props) {
         isFavourite
       })
       
+      success('Song added successfully!')
       onSongAdded(newSong)
       onClose()
     } catch (e) {
       console.error(e)
-      setError("Couldn't upload that song yet. Please try again.")
+      toastError("Couldn't upload that song yet. Please try again.")
       setIsUploading(false)
     }
   }
@@ -93,8 +94,7 @@ export function SongUploader({ onClose, onSongAdded }: Props) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-          {error && <p className="rounded-xl bg-red-500/10 border border-red-400/20 px-3 py-2 text-sm text-red-200">{error}</p>}
+        <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-6 space-y-6">
           
           {/* File Picker */}
           <div>
@@ -108,23 +108,23 @@ export function SongUploader({ onClose, onSongAdded }: Props) {
             {!file ? (
               <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-32 border-2 border-dashed border-lavender-dark/50 rounded-2xl flex flex-col items-center justify-center text-lavender-pale/60 hover:text-lavender-pale hover:bg-lavender-dark/20 hover:border-lavender-pale/50 transition-all"
+                className="w-full h-32 border-2 border-dashed border-lavender-dark/50 rounded-2xl flex flex-col items-center justify-center text-lavender-pale/60 hover:text-lavender-pale hover:bg-lavender-dark/20 hover:border-lavender-pale/50 transition-all p-4 text-center"
               >
                 <Upload className="w-8 h-8 mb-2" />
-                <span className="font-medium">Tap to select audio file</span>
+                <span className="font-medium text-sm sm:text-base">Tap to select audio file</span>
               </button>
             ) : (
-              <div className="w-full p-4 bg-lavender-dark/30 rounded-2xl border border-lavender-dark flex items-center gap-4">
-                <div className="w-12 h-12 bg-lavender-mist rounded-xl flex items-center justify-center text-midnightPlum shrink-0">
-                  <Music className="w-6 h-6" />
+              <div className="w-full p-3 sm:p-4 bg-lavender-dark/30 rounded-2xl border border-lavender-dark flex items-center gap-3 sm:gap-4 overflow-hidden">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-lavender-mist rounded-xl flex items-center justify-center text-midnightPlum shrink-0">
+                  <Music className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-lavender-mist font-medium truncate">{file.name}</p>
+                  <p className="text-lavender-mist font-medium truncate text-sm sm:text-base">{file.name}</p>
                   <p className="text-xs text-lavender-pale/60">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
                 </div>
                 <button 
                   onClick={() => setFile(null)}
-                  className="p-2 text-white/40 hover:text-white"
+                  className="p-2 text-white/40 hover:text-white shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -155,13 +155,13 @@ export function SongUploader({ onClose, onSongAdded }: Props) {
               />
             </div>
 
-            <div>
+            <div className="overflow-hidden">
               <label className="block text-xs font-bold uppercase tracking-wider text-lavender-pale/60 mb-2">Cover art (optional)</label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)}
-                className="block w-full text-sm text-lavender-pale/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-lavender-mist file:text-midnightPlum"
+                className="block w-full text-sm text-lavender-pale/70 file:mr-2 sm:file:mr-4 file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:font-medium file:bg-lavender-mist file:text-midnightPlum overflow-hidden"
               />
             </div>
 

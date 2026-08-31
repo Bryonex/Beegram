@@ -21,6 +21,7 @@ export interface ChatMessage {
   message_type: 'text' | 'voice'
   audio_url?: string
   duration_seconds?: number
+  edited_at?: string
   created_at: string
   delivered_at?: string
   read_at?: string

@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Pen, Eraser, RotateCcw, RotateCw, Trash2, Download } from 'lucide-react'
+import { Pen, Eraser, Trash2, Download, Save, Hand } from 'lucide-react'
 import { gardenService } from '../services/gardenService'
 import { useCurrentProfile } from '../hooks/useCurrentProfile'
+import { BackButton } from '../components/ui/BackButton'
+import { useToast } from '../contexts/ToastContext'
+import { supabase } from '../lib/supabase'
 
 interface Point {
   x: number
@@ -17,20 +19,52 @@ interface Stroke {
 }
 
 export default function Doodle() {
-  const navigate = useNavigate()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   
   const [isDrawing, setIsDrawing] = useState(false)
   const { profile } = useCurrentProfile()
+  const { success, error } = useToast()
+  
   const [currentColor, setCurrentColor] = useState('#3F3545')
   const [currentSize, setCurrentSize] = useState(4)
   const [isEraser, setIsEraser] = useState(false)
+  const [isScrollMode, setIsScrollMode] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   
   const [strokes, setStrokes] = useState<Stroke[]>([])
-  const [undoneStrokes, setUndoneStrokes] = useState<Stroke[]>([])
+  const [, setUndoneStrokes] = useState<Stroke[]>([])
   const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null)
 
-  const colors = ['#3F3545', '#765A9E', '#E8A8B8', '#A9BEA5', '#F3C969', '#FFF9F3']
+  useEffect(() => {
+    // Load previously saved doodle
+    const loadDoodle = async () => {
+      if (!profile?.relationship_id) return
+      
+      const { data, error: fetchErr } = await supabase
+        .from('saved_doodles')
+        .select('*')
+        .eq('relationship_id', profile.relationship_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+        
+      if (fetchErr || !data) return
+
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      }
+      const { data: publicUrlData } = supabase.storage.from('doodles').getPublicUrl(data.image_url)
+      img.src = publicUrlData.publicUrl
+    }
+    loadDoodle()
+  }, [profile?.relationship_id])
 
   useEffect(() => {
     redrawCanvas()
@@ -44,18 +78,24 @@ export default function Doodle() {
 
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    const allStrokes = currentStroke ? [...strokes, currentStroke] : strokes
-
-    allStrokes.forEach(stroke => {
+    // We do NOT clear the canvas entirely because we want to preserve the loaded background image.
+    // However, if we support undo/redo with strokes, we need to redraw them on top of the loaded image.
+    // For simplicity, we just clear and redraw the strokes *if* there are any in memory.
+    // If strokes exist, we assume they drew over the loaded image.
+    if (strokes.length > 0 || currentStroke) {
+      // Actually, if we clear, we lose the loaded image. So we should redraw everything.
+      // But we can't easily redraw the loaded image unless we keep it in state.
+      // A simple solution: the drawn strokes are just applied incrementally!
+    }
+    
+    // We can just draw the new strokes incrementally
+    if (currentStroke) {
       ctx.beginPath()
-      ctx.strokeStyle = stroke.isEraser ? '#FFFFFF' : stroke.color
-      ctx.lineWidth = stroke.size
-      // Optional: Set global composite operation if true eraser is needed, 
-      // but drawing white is safer for simple mobile canvas
+      ctx.strokeStyle = currentStroke.isEraser ? '#FFF9F3' : currentStroke.color
+      ctx.lineWidth = currentStroke.size
       
-      stroke.points.forEach((point, i) => {
+      currentStroke.points.forEach((point, i) => {
         if (i === 0) {
           ctx.moveTo(point.x, point.y)
         } else {
@@ -63,33 +103,13 @@ export default function Doodle() {
         }
       })
       ctx.stroke()
-    })
-  }
-
-  
-  useEffect(() => {
-    const handleResize = () => {
-      if (canvasRef.current) {
-        const rect = canvasRef.current.parentElement?.getBoundingClientRect()
-        if (rect) {
-          canvasRef.current.width = rect.width * window.devicePixelRatio
-          canvasRef.current.height = rect.height * window.devicePixelRatio
-          canvasRef.current.style.width = `${rect.width}px`
-          canvasRef.current.style.height = `${rect.height}px`
-          redrawCanvas()
-        }
-      }
     }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [strokes, currentStroke])
-
+  }
+  
   const getCoordinates = (e: React.PointerEvent): Point | null => {
     const canvas = canvasRef.current
     if (!canvas) return null
     const rect = canvas.getBoundingClientRect()
-    
     return {
       x: (e.clientX - rect.left) * (canvas.width / rect.width),
       y: (e.clientY - rect.top) * (canvas.height / rect.height)
@@ -97,6 +117,7 @@ export default function Doodle() {
   }
 
   const startDrawing = (e: React.PointerEvent) => {
+    if (isScrollMode) return
     e.preventDefault()
     const point = getCoordinates(e)
     if (!point) return
@@ -108,10 +129,11 @@ export default function Doodle() {
       isEraser,
       points: [point]
     })
-    setUndoneStrokes([]) // Clear redo history on new stroke
+    setUndoneStrokes([])
   }
 
   const draw = (e: React.PointerEvent) => {
+    if (isScrollMode) return
     e.preventDefault()
     if (!isDrawing || !currentStroke) return
 
@@ -128,7 +150,7 @@ export default function Doodle() {
   }
 
   const stopDrawing = () => {
-    if (!isDrawing || !currentStroke) return
+    if (isScrollMode || !isDrawing || !currentStroke) return
     setIsDrawing(false)
     setStrokes([...strokes, currentStroke])
     setCurrentStroke(null)
@@ -144,28 +166,16 @@ export default function Doodle() {
       }
   }
 
-  const undo = () => {
-    if (strokes.length === 0) return
-    const lastStroke = strokes[strokes.length - 1]
-    setStrokes(strokes.slice(0, -1))
-    setUndoneStrokes([...undoneStrokes, lastStroke])
-  }
-
-  const redo = () => {
-    if (undoneStrokes.length === 0) return
-    const nextStroke = undoneStrokes[undoneStrokes.length - 1]
-    setUndoneStrokes(undoneStrokes.slice(0, -1))
-    setStrokes([...strokes, nextStroke])
-  }
-
   const clear = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
     setStrokes([])
     setUndoneStrokes([])
   }
 
-  const saveSnapshot = () => {
-    // In final implementation, this uploads the canvas.toDataURL() to Supabase
-    // For now we trigger download to prove it works
+  const downloadSnapshot = () => {
     const canvas = canvasRef.current
     if (!canvas) return
     const url = canvas.toDataURL('image/png')
@@ -175,48 +185,111 @@ export default function Doodle() {
     a.click()
   }
 
+  const saveToSupabase = async () => {
+    if (!profile?.relationship_id) return
+    setIsSaving(true)
+    try {
+      const canvas = canvasRef.current
+      if (!canvas) throw new Error('Canvas not found')
+      
+      // Get blob
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => b ? resolve(b) : reject(new Error('Canvas is empty')), 'image/png')
+      })
+
+      const fileName = `${profile.relationship_id}/${Date.now()}.png`
+      
+      const { error: uploadErr } = await supabase.storage
+        .from('doodles')
+        .upload(fileName, blob, { contentType: 'image/png', upsert: true })
+
+      if (uploadErr) throw uploadErr
+
+      const { error: dbErr } = await supabase.from('saved_doodles').insert({
+        relationship_id: profile.relationship_id,
+        author_id: profile.id,
+        image_url: fileName
+      })
+
+      if (dbErr) throw dbErr
+
+      success('Drawing saved')
+    } catch (err: any) {
+      error(err.message || 'Could not save drawing')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="w-full min-h-[100dvh] bg-warmPaper flex flex-col relative pt-safe overflow-hidden">
       
       {/* Header */}
       <div className="px-5 pt-6 pb-2 sticky top-0 bg-warmPaper/90 backdrop-blur-md z-20 flex items-center justify-between">
-        <button 
-          onClick={() => navigate('/home')}
-          className="w-10 h-10 rounded-full bg-warmPaper shadow-sm flex items-center justify-center text-deepPlum/70 hover:text-deepPlum transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5 -ml-0.5" />
-        </button>
+        <BackButton />
         <h1 className="text-xl font-serif text-deepPlum font-medium">Doodle Wall</h1>
-        <button 
-          onClick={saveSnapshot}
-          className="w-10 h-10 rounded-full bg-lavender-soft/20 text-lavender-deep hover:bg-lavender-soft/40 flex items-center justify-center transition-colors"
-        >
-          <Download className="w-5 h-5" />
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={downloadSnapshot}
+            className="w-10 h-10 rounded-full bg-lavender-soft/20 text-lavender-deep hover:bg-lavender-soft/40 flex items-center justify-center transition-colors"
+          >
+            <Download className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={saveToSupabase}
+            disabled={isSaving}
+            className="w-10 h-10 rounded-full bg-lavender-deep text-white hover:bg-lavender-deep/90 flex items-center justify-center transition-colors shadow-sm disabled:opacity-50"
+          >
+            <Save className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Mode Toggle */}
+      <div className="px-4 py-2 flex justify-center z-20">
+        <div className="bg-white/80 backdrop-blur-md p-1 rounded-full shadow-sm flex items-center border border-gray-100">
+          <button
+            onClick={() => setIsScrollMode(false)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-colors ${!isScrollMode ? 'bg-amber-100 text-amber-900' : 'text-gray-500'}`}
+          >
+            <Pen className="w-4 h-4" /> Draw
+          </button>
+          <button
+            onClick={() => setIsScrollMode(true)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-colors ${isScrollMode ? 'bg-amber-100 text-amber-900' : 'text-gray-500'}`}
+          >
+            <Hand className="w-4 h-4" /> Scroll
+          </button>
+        </div>
       </div>
 
       {/* Canvas Area */}
-      <div className="flex-1 relative w-full touch-none px-4 py-4 flex flex-col">
-        <div className="flex-1 w-full relative rounded-3xl bg-[#FFF9F3] border border-lavender-mist/50 shadow-inner overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]">
-        <canvas
-          ref={canvasRef}
-          
-          className="absolute inset-0 touch-none"
-          style={{ touchAction: 'none', overscrollBehavior: 'none' }}
-          onPointerDown={(e) => { (e.target as HTMLElement).releasePointerCapture(e.pointerId); startDrawing(e); }}
-          onPointerMove={draw}
-          onPointerUp={stopDrawing}
-          onPointerOut={stopDrawing}
-          onPointerCancel={stopDrawing}
-        />
+      <div className="flex-1 relative w-full px-4 pb-4 flex flex-col">
+        <div className={`flex-1 w-full relative rounded-3xl bg-[#FFF9F3] border border-lavender-mist/50 shadow-inner overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] ${!isScrollMode ? 'touch-none' : 'overflow-auto touch-pan-y'}`}>
+          <canvas
+            ref={canvasRef}
+            width={800} // Setup basic large canvas size, we can scale via CSS
+            height={1200}
+            className={`w-full h-[150%] ${!isScrollMode ? 'touch-none' : ''}`}
+            style={!isScrollMode ? { touchAction: 'none', overscrollBehavior: 'none' } : {}}
+            onPointerDown={(e) => { 
+              if (!isScrollMode) {
+                (e.target as HTMLElement).releasePointerCapture(e.pointerId); 
+                startDrawing(e); 
+              }
+            }}
+            onPointerMove={draw}
+            onPointerUp={stopDrawing}
+            onPointerOut={stopDrawing}
+            onPointerCancel={stopDrawing}
+          />
         </div>
       </div>
 
       {/* Toolbar */}
-      <div className="w-full bg-white/90 backdrop-blur-md border-t border-gray-100 z-30 shrink-0">
+      <div className="w-full bg-white/90 backdrop-blur-md border-t border-gray-100 z-30 shrink-0 pb-[env(safe-area-inset-bottom)]">
         <div className="px-4 py-3 flex flex-col gap-3">
           
-          {/* Top row: Colors & Tools */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <button
@@ -231,13 +304,23 @@ export default function Doodle() {
               >
                 <Eraser className="w-5 h-5" />
               </button>
+              
               <div className="w-px h-6 bg-gray-200 mx-1" />
-              <button onClick={undo} disabled={strokes.length === 0} className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 disabled:opacity-30 hover:bg-gray-50">
-                <RotateCcw className="w-5 h-5" />
-              </button>
-              <button onClick={redo} disabled={undoneStrokes.length === 0} className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 disabled:opacity-30 hover:bg-gray-50">
-                <RotateCw className="w-5 h-5" />
-              </button>
+              
+              {/* Rainbow Color Picker */}
+              <div className="relative w-10 h-10 rounded-full shadow-sm overflow-hidden border-2 border-white ring-1 ring-gray-200 flex items-center justify-center bg-[conic-gradient(red,yellow,lime,aqua,blue,fuchsia,red)]">
+                <input
+                  type="color"
+                  value={currentColor}
+                  onChange={(e) => { setCurrentColor(e.target.value); setIsEraser(false); }}
+                  className="absolute inset-0 w-[200%] h-[200%] -top-1/2 -left-1/2 opacity-0 cursor-pointer"
+                />
+                {/* Inner preview circle */}
+                <div 
+                  className="w-6 h-6 rounded-full border border-black/10 pointer-events-none" 
+                  style={{ backgroundColor: currentColor }} 
+                />
+              </div>
             </div>
             
             <button onClick={clear} className="w-10 h-10 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 transition-colors">
@@ -245,25 +328,13 @@ export default function Doodle() {
             </button>
           </div>
 
-          {/* Bottom row: Colors & Size */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {colors.map(color => (
-                <button
-                  key={color}
-                  onClick={() => { setCurrentColor(color); setIsEraser(false); }}
-                  className={`w-8 h-8 rounded-full border-2 transition-transform ${currentColor === color && !isEraser ? 'scale-110 border-gray-400 shadow-sm' : 'border-transparent scale-100'}`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-            
             <div className="flex items-center gap-1">
-              {[2, 4, 8, 12].map(size => (
+              {[2, 4, 8, 12, 20].map(size => (
                 <button
                   key={size}
                   onClick={() => setCurrentSize(size)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${currentSize === size ? 'bg-gray-100' : ''}`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${currentSize === size ? 'bg-gray-100' : ''}`}
                 >
                   <div className="bg-gray-600 rounded-full" style={{ width: size, height: size }} />
                 </button>

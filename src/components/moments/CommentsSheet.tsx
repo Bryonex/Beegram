@@ -5,6 +5,7 @@ import type { MomentComment } from '../../types/moments'
 import { momentService } from '../../services/momentService'
 import { gardenService } from '../../services/gardenService'
 import { useCurrentProfile } from '../../hooks/useCurrentProfile'
+import { useToast } from '../../contexts/ToastContext'
 
 
 interface Props {
@@ -17,15 +18,14 @@ interface Props {
 export function CommentsSheet({ momentId, comments, onClose, onCommentAdded }: Props) {
   const [newComment, setNewComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const { profile } = useCurrentProfile()
+  const { success, error: toastError } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newComment.trim() || isSubmitting) return
 
     setIsSubmitting(true)
-    setError(null)
     try {
       const comment = await momentService.addComment(momentId, newComment.trim())
       onCommentAdded(comment)
@@ -41,9 +41,10 @@ export function CommentsSheet({ momentId, comments, onClose, onCommentAdded }: P
       }
       
       setNewComment('')
+      success('Comment added')
     } catch (err) {
       console.error('Failed to add comment', err)
-      setError("Couldn't post that comment yet.")
+      toastError("Couldn't post that comment yet.")
     } finally {
       setIsSubmitting(false)
     }
@@ -102,7 +103,6 @@ export function CommentsSheet({ momentId, comments, onClose, onCommentAdded }: P
 
           {/* Composer */}
           <div className="p-4 bg-white border-t border-rose-base/30 px-6 pb-safe">
-            {error && <p className="mb-2 text-sm text-red-700" role="status">{error}</p>}
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
               <div className="flex-1 bg-rose-white rounded-full border border-rose-base/50 flex items-center px-4 py-2">
                 <input
