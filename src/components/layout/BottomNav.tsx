@@ -1,19 +1,14 @@
 import { NavLink } from 'react-router-dom'
-import { Home, MessageCircle, Heart, Gamepad2, Flower2, Bell } from 'lucide-react'
+import { Home, MessageCircle, Heart, Gamepad2, Flower2 } from 'lucide-react'
 import { cn } from '../ui/Button'
 import { motion } from 'framer-motion'
-import { useUnreadNotifications } from '../../hooks/useUnreadNotifications'
-
 export function BottomNav() {
-  const { unreadCount } = useUnreadNotifications()
-
   const navItems = [
     { to: '/home', icon: Home, label: 'Home' },
     { to: '/messages', icon: MessageCircle, label: 'Messages' },
     { to: '/moments', icon: Heart, label: 'Moments' },
     { to: '/games', icon: Gamepad2, label: 'Games' },
     { to: '/garden', icon: Flower2, label: 'Garden' },
-    { to: '/notifications', icon: Bell, label: 'Alerts' },
   ]
 
   return (
@@ -40,12 +35,6 @@ export function BottomNav() {
                 )}
                 <div className="relative">
                   <item.icon className="w-5 h-5 mb-1" strokeWidth={isActive ? 2.5 : 2} />
-                  {item.to === '/notifications' && unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 border border-white"></span>
-                    </span>
-                  )}
                 </div>
                 <span className="text-[10px] font-medium leading-none">{item.label}</span>
               </>

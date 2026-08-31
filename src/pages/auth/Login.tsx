@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import heroImg from '../../assets/hero.png'
 
-const loginHero = '/beegram%201img.jpeg'
+const loginHero = '/heart%20loginpage.jpeg'
 
 export function Login() {
   const [username, setUsername] = useState('')
@@ -62,9 +62,15 @@ export function Login() {
 
   if (sessionLoading) {
     return (
-      <div className="min-h-dvh bg-warmPaper flex flex-col items-center justify-center p-6">
-        <div className="w-8 h-8 border-2 border-lavender-dark/30 border-t-lavender-dark rounded-full animate-spin mb-4" />
-        <p className="font-serif text-deepPlum/60 animate-pulse">Checking your little world...</p>
+      <div className="min-h-[100dvh] bg-[#FFF9F3] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Soft background glows */}
+        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-[#DED6E8]/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-[#FFE4E1]/20 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="flex flex-col items-center z-10 animate-pulse">
+          <div className="text-4xl mb-4 animate-bounce">🐝</div>
+          <p className="font-serif text-[#4A3219]/60 tracking-wider">Loading our world...</p>
+        </div>
       </div>
     )
   }

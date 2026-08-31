@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, HeartPulse, Send, Mic } from 'lucide-react'
+import { Mail, HeartPulse, Send } from 'lucide-react'
 import { ChatBox } from '../components/messages/chat/ChatBox'
 import { LetterList } from '../components/messages/letters/LetterList'
 import { BuzzPad } from '../components/messages/buzz/BuzzPad'
 import { BuzzReceiver } from '../components/messages/buzz/BuzzReceiver'
-import { VoiceNoteList } from '../components/messages/voice/VoiceNoteList'
 
-type Tab = 'Letters' | 'Chat' | 'Buzz' | 'Notes'
+type Tab = 'Letters' | 'Chat' | 'Buzz'
 
 export function Messages() {
   const [activeTab, setActiveTab] = useState<Tab>('Letters')
@@ -24,7 +23,7 @@ export function Messages() {
 
         {/* Main Tabs */}
         <div className="flex bg-blush/30 p-1.5 rounded-full shadow-inner gap-1">
-          {(['Letters', 'Chat', 'Buzz', 'Notes'] as const).map(tab => {
+          {(['Letters', 'Chat', 'Buzz'] as const).map(tab => {
             const isActive = activeTab === tab
             return (
               <button
@@ -39,7 +38,6 @@ export function Messages() {
                 {tab === 'Letters' && <Mail className="w-4 h-4" />}
                 {tab === 'Chat' && <Send className="w-4 h-4" />}
                 {tab === 'Buzz' && <HeartPulse className="w-4 h-4" />}
-                {tab === 'Notes' && <Mic className="w-4 h-4" />}
                 <span className="hidden sm:inline">{tab}</span>
               </button>
             )
@@ -61,7 +59,6 @@ export function Messages() {
             {activeTab === 'Letters' && <LetterList />}
             {activeTab === 'Chat' && <ChatBox />}
             {activeTab === 'Buzz' && <BuzzPad />}
-            {activeTab === 'Notes' && <VoiceNoteList />}
           </motion.div>
         </AnimatePresence>
       </div>

@@ -84,6 +84,17 @@ export default function Songs() {
         </motion.div>
 
       </div>
+      
+      {/* Fixed Sticky Upload Button */}
+      <motion.button 
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsUploading(true)}
+        className="fixed bottom-24 right-5 w-14 h-14 rounded-full bg-lavender-dark text-white flex items-center justify-center shadow-xl hover:bg-lavender-dark/90 transition-colors z-40 border border-lavender-mist/20"
+      >
+        <Plus className="w-6 h-6" />
+      </motion.button>
 
       <AnimatePresence>
         {isUploading && (

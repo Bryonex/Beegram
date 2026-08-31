@@ -312,6 +312,17 @@ export default function Home() {
           </motion.div>
         </div>
 
+        {/* Easter Egg */}
+        <div className="flex justify-center pb-8 pt-4">
+          <button 
+            onClick={() => navigate('/does-not-exist')}
+            className="opacity-40 hover:opacity-100 hover:scale-110 transition-all duration-300"
+            title="Lost Bee"
+          >
+            <span className="text-xl">🐝</span>
+          </button>
+        </div>
+
       </div>
     </div>
   )
