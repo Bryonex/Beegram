@@ -4,11 +4,45 @@ import { MiniPlayer } from '../music/MiniPlayer'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAudioPlayer } from '../../hooks/useAudioPlayer'
 import type { CSSProperties } from 'react'
+import { useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
+import { useCurrentProfile } from '../../hooks/useCurrentProfile'
+import { useToast } from '../../contexts/ToastContext'
 
 export function AppShell() {
   const location = useLocation()
   const { currentTrack, isMiniPlayerMinimized } = useAudioPlayer()
+  const { profile } = useCurrentProfile()
+  const { toast } = useToast()
   
+  useEffect(() => {
+    if (!profile?.id) return
+
+    const channel = supabase.channel('realtime:notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${profile.id}`
+        },
+        (payload) => {
+          const { message } = payload.new
+          toast(message, 'info')
+          
+          if ('vibrate' in navigator) {
+            navigator.vibrate([50, 100, 50])
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [profile?.id, toast])
+
   // Login is the only public application screen. The root route is still
   // guarded, so it must not suppress the private shell while it resolves.
   const isAuth = location.pathname === '/login'

@@ -1,11 +1,15 @@
 import { supabase } from '../lib/supabase'
 import { requireUuid } from '../lib/ids'
 import type { Song, SongInsert } from '../types/music'
+import { notificationService } from './notificationService'
 
 async function signedMusicUrl(pathOrUrl: string | undefined): Promise<string | undefined> {
   if (!pathOrUrl || /^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
   const { data, error } = await supabase.storage.from('music').createSignedUrl(pathOrUrl, 60 * 60)
-  if (error) throw error
+  if (error) {
+    console.error('Failed to sign music URL:', error)
+    return undefined
+  }
   return data.signedUrl
 }
 
@@ -81,6 +85,17 @@ export const musicService = {
       .select('*, profiles:added_by (username, display_name)')
       .single()
     if (error) throw error
+
+    const partnerId = await notificationService.getPartnerId(song.relationshipId, song.authorId)
+    if (partnerId) {
+      await notificationService.sendNotification(
+        partnerId,
+        song.relationshipId,
+        'song',
+        `${data.profiles?.display_name || 'Your partner'} uploaded a new song: ${song.title}`
+      )
+    }
+
     return {
       id: data.id,
       relationshipId: data.relationship_id,

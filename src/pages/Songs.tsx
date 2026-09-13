@@ -91,7 +91,8 @@ export default function Songs() {
         animate={{ opacity: 1, scale: 1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsUploading(true)}
-        className="fixed bottom-24 right-5 w-14 h-14 rounded-full bg-lavender-dark text-white flex items-center justify-center shadow-xl hover:bg-lavender-dark/90 transition-colors z-40 border border-lavender-mist/20"
+        className="fixed right-5 w-14 h-14 rounded-full bg-lavender-dark text-white flex items-center justify-center shadow-xl hover:bg-lavender-dark/90 transition-colors z-[60] border border-lavender-mist/20"
+        style={{ bottom: 'calc(var(--beegram-composer-offset, 6rem) + 1rem)' }}
       >
         <Plus className="w-6 h-6" />
       </motion.button>

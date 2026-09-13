@@ -12,7 +12,8 @@ export default function Compass() {
   // Simulated compass state
   const [heading, setHeading] = useState(0)
   const [distance, setDistance] = useState(0)
-  const [isLocating, setIsLocating] = useState(true)
+  const [isLocating, setIsLocating] = useState(false)
+  const [hasPermission, setHasPermission] = useState(false)
   const hasPartnerLocation = !!(partner?.latitude && partner?.longitude)
 
   const isUserSun = profile?.username?.toLowerCase() === 'sundar'
@@ -46,11 +47,12 @@ const calculateBearing = (lat1: number, lon1: number, lat2: number, lon2: number
 }
 
 useEffect(() => {
-  if (!profile) return
+  if (!profile || !hasPermission) return
 
   let watchId: number
   const updateLocation = () => {
     if ('geolocation' in navigator) {
+      setIsLocating(true)
       watchId = navigator.geolocation.watchPosition(async (pos) => {
         const lat = pos.coords.latitude
         const lon = pos.coords.longitude
@@ -86,15 +88,12 @@ useEffect(() => {
   return () => {
     if (watchId) navigator.geolocation.clearWatch(watchId)
   }
-}, [profile, partner])
+}, [profile, partner, hasPermission])
 
   useEffect(() => {
-
-
-    let compassInterval: ReturnType<typeof setInterval>
+    if (!hasPermission) return
     
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      // Use webkitCompassHeading for iOS if available, else alpha
       let currentHeading = 0
       if ('webkitCompassHeading' in event) {
         currentHeading = (event as any).webkitCompassHeading
@@ -107,37 +106,22 @@ useEffect(() => {
     if (window.DeviceOrientationEvent) {
       window.addEventListener('deviceorientationabsolute', handleOrientation as any)
       window.addEventListener('deviceorientation', handleOrientation as any)
-    } else {
-      // Fallback to simulate subtle compass movement if no API
-      compassInterval = setInterval(() => {
-        setHeading(prev => {
-          const drift = (Math.random() - 0.5) * 5
-          return (prev + drift + 360) % 360
-        })
-      }, 100)
     }
 
     return () => {
-      if (compassInterval) clearInterval(compassInterval)
       window.removeEventListener('deviceorientationabsolute', handleOrientation as any)
       window.removeEventListener('deviceorientation', handleOrientation as any)
     }
-  }, [])
+  }, [hasPermission])
 
   const requestCompassPermission = async () => {
+    setHasPermission(true)
+    
     if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
       try {
         const permissionState = await (DeviceOrientationEvent as any).requestPermission()
         if (permissionState === 'granted') {
-          window.addEventListener('deviceorientation', (e) => {
-             let currentHeading = 0
-             if ('webkitCompassHeading' in e) {
-               currentHeading = (e as any).webkitCompassHeading
-             } else if (e.alpha !== null) {
-               currentHeading = 360 - e.alpha
-             }
-             setHeading(currentHeading)
-          })
+           // Handled by useEffect
         }
       } catch (error) {
         console.error(error)
@@ -172,6 +156,21 @@ useEffect(() => {
             <div className="w-12 h-12 border-4 border-lavender-soft border-t-lavender-deep rounded-full animate-spin" />
             <p className="text-deepPlum/60 text-sm font-medium animate-pulse">Finding our coordinates...</p>
           </div>
+        ) : !hasPermission ? (
+          <div className="flex flex-col items-center justify-center space-y-6 max-w-xs text-center py-10">
+            <div className="w-16 h-16 bg-white/60 backdrop-blur-md rounded-full shadow-sm flex items-center justify-center mb-2 border border-lavender-mist/50">
+              <Navigation className="w-8 h-8 text-lavender-deep/60" />
+            </div>
+            <button
+              onClick={requestCompassPermission}
+              className="px-6 py-3 bg-lavender-deep text-white font-medium rounded-full shadow-md hover:bg-deepPlum transition-colors"
+            >
+              Point me to {partner?.display_name || partnerLabel}
+            </button>
+            <p className="text-xs text-deepPlum/60 font-sans leading-relaxed">
+              We need location and orientation access to point the compass.
+            </p>
+          </div>
         ) : !hasPartnerLocation ? (
           <div className="flex flex-col items-center justify-center space-y-4 max-w-xs text-center py-10">
             <div className="w-16 h-16 bg-white/60 backdrop-blur-md rounded-full shadow-sm flex items-center justify-center mb-2 border border-lavender-mist/50">
@@ -179,7 +178,7 @@ useEffect(() => {
             </div>
             <h2 className="text-lg font-serif text-deepPlum font-medium">Waiting for {partnerLabel}</h2>
             <p className="text-sm text-deepPlum/60 font-sans leading-relaxed">
-              We need {partner?.display_name}'s location to guide you to them. Tell them to open the Compass.
+              We need {partner?.display_name || partnerLabel}'s location to guide you to them. Tell them to open the Compass.
             </p>
           </div>
         ) : (

@@ -1,11 +1,15 @@
 import { supabase } from '../lib/supabase'
 import { requireUuid } from '../lib/ids'
 import type { Moment, MomentInsert, MomentReaction, MomentComment } from '../types/moments'
+import { notificationService } from './notificationService'
 
 async function signedMomentUrl(pathOrUrl: string | undefined): Promise<string | undefined> {
   if (!pathOrUrl || /^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
   const { data, error } = await supabase.storage.from('moments').createSignedUrl(pathOrUrl, 60 * 60)
-  if (error) throw error
+  if (error) {
+    console.error('Failed to create signed URL for moment media:', error)
+    return undefined // Do not throw, keep the moment record visible even if media is broken
+  }
   return data.signedUrl
 }
 
@@ -111,6 +115,16 @@ export const momentService = {
       throw insertError
     }
 
+    const partnerId = await notificationService.getPartnerId(profile.relationship_id, user.id)
+    if (partnerId) {
+      await notificationService.sendNotification(
+        partnerId,
+        profile.relationship_id,
+        'moment',
+        `${profile.display_name || 'Your partner'} posted a new moment`
+      )
+    }
+
     const mediaUrl = await signedMomentUrl(row.media_url)
     return {
       id: row.id,
@@ -140,6 +154,18 @@ export const momentService = {
       .select('id, user_id, created_at, profiles!moment_reactions_user_id_fkey ( display_name )')
       .single()
     if (error) throw error
+
+    // Fetch moment author and relationship_id to notify them
+    const { data: momentData } = await (supabase as any).from('moments').select('user_id, relationship_id').eq('id', momentId).single()
+    if (momentData && momentData.user_id !== user.id) {
+      await notificationService.sendNotification(
+        momentData.user_id,
+        momentData.relationship_id,
+        'moment_like',
+        `${data.profiles?.display_name || 'Your partner'} liked your moment`
+      )
+    }
+
     return {
       id: data.id,
       momentId,
@@ -170,6 +196,18 @@ export const momentService = {
       .select('id, author_id, content, created_at, profiles!moment_comments_author_id_fkey ( display_name )')
       .single()
     if (error) throw error
+
+    // Fetch moment author and relationship_id to notify them
+    const { data: momentData } = await (supabase as any).from('moments').select('user_id, relationship_id').eq('id', momentId).single()
+    if (momentData && momentData.user_id !== user.id) {
+      await notificationService.sendNotification(
+        momentData.user_id,
+        momentData.relationship_id,
+        'moment_comment',
+        `${data.profiles?.display_name || 'Your partner'} commented on your moment`
+      )
+    }
+
     return {
       id: data.id,
       momentId,

@@ -11,6 +11,7 @@ import type {
   BuzzInsert,
   AppNotificationInsert,
 } from '../types/messages'
+import { notificationService } from './notificationService'
 
 async function signedVoiceUrl(pathOrUrl: string | undefined): Promise<string | undefined> {
   if (!pathOrUrl || /^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
@@ -50,6 +51,19 @@ export const messageService = {
       .select()
       .single()
     if (error) throw error
+
+    // Fetch sender profile to notify recipient
+    const partnerId = await notificationService.getPartnerId(insert.relationship_id, insert.author_id)
+    if (partnerId) {
+      const { data: profile } = await (supabase as any).from('profiles').select('display_name').eq('id', insert.author_id).single()
+      await notificationService.sendNotification(
+        partnerId,
+        insert.relationship_id,
+        'letter',
+        `${profile?.display_name || 'Your partner'} sent you a letter`
+      )
+    }
+
     return data as Letter
   },
 
@@ -70,6 +84,18 @@ export const messageService = {
     requireUuid(insert.recipient_id, 'recipient ID')
     const { data, error } = await (supabase as any).from('messages').insert(insert).select().single()
     if (error) throw error
+
+    const partnerId = await notificationService.getPartnerId(insert.relationship_id, insert.user_id)
+    if (partnerId) {
+      const { data: profile } = await (supabase as any).from('profiles').select('display_name').eq('id', insert.user_id).single()
+      await notificationService.sendNotification(
+        partnerId,
+        insert.relationship_id,
+        'message',
+        `${profile?.display_name || 'Your partner'}: ${insert.content || 'Voice message'}`
+      )
+    }
+
     return hydrateChatMessage(data as ChatMessage)
   },
 
