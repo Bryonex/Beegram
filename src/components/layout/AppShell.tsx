@@ -28,8 +28,8 @@ export function AppShell() {
           filter: `recipient_id=eq.${profile.id}`
         },
         (payload) => {
-          const { message } = payload.new
-          toast(message, 'info')
+          const { title } = payload.new
+          toast(title, 'info')
           
           if ('vibrate' in navigator) {
             navigator.vibrate([50, 100, 50])

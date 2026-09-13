@@ -50,7 +50,7 @@ export function SongUploader({ onClose, onSongAdded }: Props) {
       const newSong = await musicService.addSong({
         relationshipId: profile.relationship_id,
         authorId: profile.id,
-        addedBy: profile.display_name || 'You',
+        addedBy: profile.id,
         title: title.trim(),
         artist: artist.trim(),
         audioUrl,
@@ -71,7 +71,7 @@ export function SongUploader({ onClose, onSongAdded }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center pb-[calc(4rem+env(safe-area-inset-bottom))]">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

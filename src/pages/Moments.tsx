@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Plus } from 'lucide-react'
 import type { Moment, MomentInsert } from '../types/moments'
@@ -14,25 +14,33 @@ export default function Moments() {
   const [loading, setLoading] = useState(true)
   const [isComposerOpen, setIsComposerOpen] = useState(false)
   const { profile } = useCurrentProfile()
+  const optimisticIds = useRef<Set<string>>(new Set())
+
+  const loadMoments = async () => {
+    try {
+      const data = await momentService.getMoments()
+      setMoments(prev => {
+        // If we have optimistically added moments, ensure they stay at the top if they are missing
+        const newIds = new Set(data.map(m => m.id))
+        const optimisticsToKeep = prev.filter(m => optimisticIds.current.has(m.id) && !newIds.has(m.id))
+        return [...optimisticsToKeep, ...data]
+      })
+    } catch (err) {
+      console.error('Failed to load moments', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    async function loadMoments() {
-      try {
-        const data = await momentService.getMoments()
-        setMoments(data)
-      } catch (err) {
-        console.error('Failed to load moments', err)
-      } finally {
-        setLoading(false)
-      }
-    }
     loadMoments()
   }, [])
 
   const handleCreate = async (momentData: MomentInsert) => {
     try {
       const newMoment = await momentService.createMoment(momentData)
-      setMoments(prev => [newMoment, ...prev])
+      optimisticIds.current.add(newMoment.id)
+      setMoments(prev => [newMoment, ...prev.filter(m => m.id !== newMoment.id)])
       
       if (profile?.relationship_id) {
         gardenService.checkAndUnlockAchievement(
@@ -43,6 +51,9 @@ export default function Moments() {
           'Moments'
         ).catch(console.error)
       }
+
+      // Explicitly reload from server to ensure perfect sync
+      loadMoments()
     } catch (err) {
       console.error('Failed to create moment', err)
       throw err // Let composer handle error state

@@ -73,7 +73,11 @@ export function MomentCard({ moment: initialMoment }: Props) {
           className="w-full relative rounded-2xl overflow-hidden cursor-pointer"
           onClick={() => openGallery(0)}
         >
-          {m.type === 'video' ? (
+          {m.url === 'error' ? (
+            <div className="w-full h-48 bg-rose-base/30 flex items-center justify-center text-rose-dusty text-sm">
+              Media temporarily unavailable
+            </div>
+          ) : m.type === 'video' ? (
             <div className="relative aspect-[4/5] bg-rose-plum/10">
               <video src={m.url} poster={m.posterUrl} className="w-full h-full object-cover" muted playsInline preload="metadata" />
               <div className="absolute inset-0 flex items-center justify-center bg-black/20">

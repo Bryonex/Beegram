@@ -8,7 +8,8 @@ export interface AppNotification {
   recipient_id: string
   sender_id: string
   type: NotificationType
-  message: string
+  title: string
+  body?: string
   created_at: string
   read_at: string | null
 }
@@ -29,7 +30,8 @@ export const notificationService = {
     recipientId: string,
     relationshipId: string,
     type: NotificationType,
-    message: string
+    title: string,
+    body?: string
   ) {
     if (!recipientId || !relationshipId) {
       console.warn('Missing recipient or relationship ID for notification')
@@ -50,7 +52,8 @@ export const notificationService = {
           recipient_id: recipientId,
           sender_id: user.id,
           type,
-          message
+          title,
+          body
         })
         .select()
         .single()

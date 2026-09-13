@@ -40,13 +40,13 @@ export const momentService = {
         location: m.location || undefined,
         date: m.occurred_on || m.created_at,
         isFavourite: false,
-        media: mediaUrl ? [{
+        media: [{
           id: m.id,
           momentId: m.id,
           type: m.media_type as 'image' | 'video',
-          url: mediaUrl,
+          url: mediaUrl || 'error',
           order: 0,
-        }] : [],
+        }],
         reactions: (m.moment_reactions || []).map((reaction: any) => ({
           id: reaction.id,
           momentId: m.id,
@@ -135,7 +135,7 @@ export const momentService = {
       location: row.location || undefined,
       date: row.occurred_on || row.created_at,
       isFavourite: false,
-      media: mediaUrl ? [{ id: row.id, momentId: row.id, type: row.media_type, url: mediaUrl, order: 0 }] : [],
+      media: [{ id: row.id, momentId: row.id, type: row.media_type, url: mediaUrl || 'error', order: 0 }],
       reactions: [],
       comments: [],
       createdAt: row.created_at,

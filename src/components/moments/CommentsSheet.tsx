@@ -52,7 +52,7 @@ export function CommentsSheet({ momentId, comments, onClose, onCommentAdded }: P
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex flex-col justify-end">
+      <div className="fixed inset-0 z-40 flex flex-col justify-end pb-[calc(4rem+env(safe-area-inset-bottom))]">
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -102,7 +102,7 @@ export function CommentsSheet({ momentId, comments, onClose, onCommentAdded }: P
           </div>
 
           {/* Composer */}
-          <div className="p-4 bg-white border-t border-rose-base/30 px-6 pb-safe">
+          <div className="p-4 bg-white border-t border-rose-base/30 px-6 shrink-0">
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
               <div className="flex-1 bg-rose-white rounded-full border border-rose-base/50 flex items-center px-4 py-2">
                 <input

@@ -171,6 +171,18 @@ export const messageService = {
     requireUuid(insert.sender_id, 'sender ID')
     const { data, error } = await (supabase as any).from('buzz_events').insert(insert).select().single()
     if (error) throw error
+
+    const partnerId = await notificationService.getPartnerId(insert.relationship_id, insert.sender_id)
+    if (partnerId) {
+      const { data: profile } = await (supabase as any).from('profiles').select('display_name').eq('id', insert.sender_id).single()
+      await notificationService.sendNotification(
+        partnerId,
+        insert.relationship_id,
+        'buzz',
+        `${profile?.display_name || 'Your partner'} sent a Buzz! 🐝`
+      )
+    }
+
     return data as Buzz
   },
 

@@ -52,10 +52,11 @@ export default function Songs() {
           
           <motion.button 
             whileTap={{ scale: 0.9 }}
-            className="w-10 h-10 rounded-full bg-lavender-dark/30 border border-lavender-dark/50 flex items-center justify-center text-lavender-pale hover:bg-lavender-dark/50 transition-colors shadow-soft shrink-0"
+            className="px-4 py-2 rounded-full bg-lavender-dark/30 border border-lavender-dark/50 flex items-center justify-center text-lavender-pale hover:bg-lavender-dark/50 transition-colors shadow-soft shrink-0 gap-2"
             onClick={() => setIsUploading(true)}
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
+            <span className="text-sm font-medium">Add Song</span>
           </motion.button>
         </motion.div>
 
@@ -84,18 +85,6 @@ export default function Songs() {
         </motion.div>
 
       </div>
-      
-      {/* Fixed Sticky Upload Button */}
-      <motion.button 
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsUploading(true)}
-        className="fixed right-5 w-14 h-14 rounded-full bg-lavender-dark text-white flex items-center justify-center shadow-xl hover:bg-lavender-dark/90 transition-colors z-[60] border border-lavender-mist/20"
-        style={{ bottom: 'calc(var(--beegram-composer-offset, 6rem) + 1rem)' }}
-      >
-        <Plus className="w-6 h-6" />
-      </motion.button>
 
       <AnimatePresence>
         {isUploading && (
