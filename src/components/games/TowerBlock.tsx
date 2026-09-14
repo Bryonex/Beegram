@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, Trophy } from 'lucide-react'
-import { GameRulesModal } from './GameRulesModal'
 import { gameService } from '../../services/gameService'
 import { useCurrentProfile } from '../../hooks/useCurrentProfile'
 import { useToast } from '../../contexts/ToastContext'
@@ -19,7 +18,6 @@ const INITIAL_WIDTH = 200
 const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5']
 
 export function TowerBlock({ onBack }: { onBack: () => void }) {
-  const [showRules, setShowRules] = useState(true)
   const [score, setScore] = useState(0)
   const [highScore, setHighScore] = useState(0)
   const [gameOver, setGameOver] = useState(false)
@@ -160,17 +158,6 @@ export function TowerBlock({ onBack }: { onBack: () => void }) {
       className="fixed inset-0 z-50 bg-[#2A2B38] flex flex-col pt-safe text-white select-none"
       onClick={() => gameStarted && !gameOver && placeBlock()}
     >
-      <GameRulesModal
-        isOpen={showRules}
-        title="Tower Block"
-        rules={[
-          "Tap anywhere to drop the moving block.",
-          "Align it perfectly over the block below.",
-          "Any overhanging parts will be sliced off!",
-          "Build as high as you can."
-        ]}
-        onClose={() => setShowRules(false)}
-      />
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 bg-[#1A1B26]/80 backdrop-blur-md z-10">
@@ -228,7 +215,7 @@ export function TowerBlock({ onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        {!gameStarted && !showRules && (
+        {!gameStarted && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
             <button 
               onClick={(e) => { e.stopPropagation(); startGame() }}

@@ -1,6 +1,7 @@
 
 import { supabase } from '../lib/supabase'
 import { requireUuid } from '../lib/ids'
+import { notificationService } from './notificationService'
 
 export interface GardenItem {
   id: string
@@ -36,6 +37,17 @@ export const gardenService = {
       .select()
       .single()
     if (error) throw error
+
+    const partnerId = await notificationService.getPartnerId(insert.relationship_id, insert.author_id)
+    if (partnerId) {
+      await notificationService.sendNotification(
+        partnerId,
+        insert.relationship_id,
+        'garden',
+        'A new memory flower bloomed in the garden'
+      )
+    }
+
     return data as GardenItem
   },
 

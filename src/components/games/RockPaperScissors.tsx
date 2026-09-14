@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Trophy } from 'lucide-react'
-import { GameRulesModal } from './GameRulesModal'
 import { gameService } from '../../services/gameService'
 import { useCurrentProfile } from '../../hooks/useCurrentProfile'
 import { useToast } from '../../contexts/ToastContext'
@@ -16,7 +15,6 @@ const choices = [
 ] as const
 
 export function RockPaperScissors({ onBack }: { onBack: () => void }) {
-  const [showRules, setShowRules] = useState(true)
   const [streak, setStreak] = useState(0)
   const [highScore, setHighScore] = useState(0)
   const [playerChoice, setPlayerChoice] = useState<Choice>(null)
@@ -94,16 +92,6 @@ export function RockPaperScissors({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-[#F5F3E9] flex flex-col pt-safe">
-      <GameRulesModal
-        isOpen={showRules}
-        title="Rock Paper Scissors"
-        rules={[
-          "Beat the bot to build your win streak.",
-          "Rock beats Scissors, Scissors beats Paper, Paper beats Rock.",
-          "Losing resets your streak. Try to set a new High Score!"
-        ]}
-        onClose={() => setShowRules(false)}
-      />
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 bg-white/50 backdrop-blur-md border-b border-black/5">

@@ -22,7 +22,7 @@ import { useCurrentProfile } from '../hooks/useCurrentProfile'
 
 export default function Garden() {
   const [selectedItem, setSelectedItem] = useState<GardenItem | null>(null)
-  const [timePhase, setTimePhase] = useState<'day' | 'sunset' | 'night'>('day')
+  const [timePhase, setTimePhase] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('morning')
   const [orbitProgress, setOrbitProgress] = useState(0)
   
   const [items, setItems] = useState<GardenItem[]>([])
@@ -53,20 +53,24 @@ export default function Garden() {
       const totalMinutes = hour * 60 + minutes
       
       // Calculate phase
-      if (hour >= 6 && hour < 17) {
-        setTimePhase('day')
-        setOrbitProgress((totalMinutes - (6 * 60)) / (11 * 60)) // 6am to 5pm
+      if (hour >= 5 && hour < 12) {
+        setTimePhase('morning')
+        setOrbitProgress((totalMinutes - (5 * 60)) / (7 * 60)) // 5am to 12pm
       }
-      else if (hour >= 17 && hour < 19) {
-        setTimePhase('sunset')
-        setOrbitProgress((totalMinutes - (17 * 60)) / (2 * 60)) // 5pm to 7pm
+      else if (hour >= 12 && hour < 17) {
+        setTimePhase('afternoon')
+        setOrbitProgress((totalMinutes - (12 * 60)) / (5 * 60)) // 12pm to 5pm
+      }
+      else if (hour >= 17 && hour < 20) {
+        setTimePhase('evening')
+        setOrbitProgress((totalMinutes - (17 * 60)) / (3 * 60)) // 5pm to 8pm
       }
       else {
         setTimePhase('night')
         let nightMinutes = totalMinutes
-        if (hour >= 19) nightMinutes -= (19 * 60)
-        else nightMinutes += (5 * 60)
-        setOrbitProgress(nightMinutes / (11 * 60)) // 7pm to 6am
+        if (hour >= 20) nightMinutes -= (20 * 60)
+        else nightMinutes += (4 * 60)
+        setOrbitProgress(nightMinutes / (9 * 60)) // 8pm to 5am
       }
     }
     
@@ -77,35 +81,48 @@ export default function Garden() {
 
   const theme = useMemo(() => {
     switch (timePhase) {
-      case 'day': return {
-        bg: 'bg-[#F5F7F4]',
-        text: 'text-deepPlum',
-        subtext: 'text-deepPlum/60',
-        sky: 'from-[#e0f2fe] to-[#F5F7F4]',
-        celestial: <CustomSun className="w-24 h-24" />,
-        greeting: 'Good morning, Sun.',
-        glow: 'bg-sunflower/20'
+      case 'morning': return {
+        bg: 'bg-[#F9FAFB]',
+        text: 'text-[#065F46]',
+        subtext: 'text-[#065F46]/60',
+        sky: 'from-[#E0F2FE] via-[#F0FDF4] to-[#F9FAFB]',
+        celestial: <CustomSun className="w-24 h-24" highlight={profile?.username?.toLowerCase() === 'sundar'} />,
+        greeting: 'Good morning, growing garden.',
+        glow: 'bg-[#FDE68A]/30',
+        particles: 'bg-[#D1FAE5]'
       }
-      case 'sunset': return {
+      case 'afternoon': return {
+        bg: 'bg-[#FEF3C7]',
+        text: 'text-amber-900',
+        subtext: 'text-amber-900/60',
+        sky: 'from-[#60A5FA] via-[#BAE6FD] to-[#FEF3C7]',
+        celestial: <CustomSun className="w-24 h-24" highlight={profile?.username?.toLowerCase() === 'sundar'} />,
+        greeting: 'Bright afternoon in the garden.',
+        glow: 'bg-yellow-300/40',
+        particles: 'bg-yellow-200'
+      }
+      case 'evening': return {
         bg: 'bg-[#FFF0F0]',
-        text: 'text-deepPlum',
-        subtext: 'text-deepPlum/60',
-        sky: 'from-[#fed7aa] to-[#FFF0F0]',
-        celestial: <CustomSun className="w-24 h-24 opacity-80" />,
-        greeting: 'Sun meets Moon.',
-        glow: 'bg-orange-300/20'
+        text: 'text-rose-900',
+        subtext: 'text-rose-900/60',
+        sky: 'from-[#FDBA74] via-[#FCA5A5] to-[#FFF0F0]',
+        celestial: <CustomSun className="w-24 h-24 opacity-80" highlight={profile?.username?.toLowerCase() === 'sundar'} />,
+        greeting: 'Warm sunset in the garden.',
+        glow: 'bg-orange-400/30',
+        particles: 'bg-orange-200'
       }
       case 'night': return {
         bg: 'bg-[#1a1b2e]',
         text: 'text-lavender-mist',
         subtext: 'text-lavender-pale/60',
-        sky: 'from-[#0f172a] to-[#1a1b2e]',
-        celestial: <CustomMoon className="w-20 h-20" />,
-        greeting: 'Good evening, Moon.',
-        glow: 'bg-indigo-500/20'
+        sky: 'from-[#0f172a] via-[#1e1b4b] to-[#1a1b2e]',
+        celestial: <CustomMoon className="w-20 h-20" highlight={profile?.username?.toLowerCase() === 'bee'} />,
+        greeting: 'Good evening, moonlit garden.',
+        glow: 'bg-indigo-500/20',
+        particles: 'bg-indigo-300 shadow-[0_0_8px_rgba(165,180,252,0.8)]' // Fireflies
       }
     }
-  }, [timePhase])
+  }, [timePhase, profile])
 
   // Celestial mechanics: moves in an arc from left (0%) to right (100%) and rises in the middle
   const orbitStyle = {
@@ -158,8 +175,32 @@ export default function Garden() {
 
         {/* Garden Ground Area */}
         <div className={`mx-5 h-[400px] relative border ${timePhase==='night'?'border-white/10 bg-black/20':'border-sage/20 bg-white/40'} rounded-[2rem] backdrop-blur-sm overflow-hidden shadow-sm transition-colors duration-1000 flex-shrink-0`}>
-          <div className={`absolute inset-0 opacity-20 bg-[radial-gradient(${timePhase==='night'?'#ffffff':'#A9BEA5'}_1px,transparent_1px)] [background-size:24px_24px]`} />
+          {/* Animated Grass / Background Pattern */}
+          <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTIwIDQwIEMyMCAyMCAxMCAxMCAxMCAwIiBzdHJva2U9IiNBOUJFQTUiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMjAgNDAgQzIwIDIwIDMwIDEwIDMwIDAiIHN0cm9rZT0iI0E5QkVBNSIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==')] animate-[pulse_4s_ease-in-out_infinite]" />
           
+          {/* Ambient Particles */}
+          {Array.from({ length: 15 }).map((_, i) => (
+            <motion.div
+              key={`particle-${i}`}
+              className={`absolute w-1 h-1 rounded-full ${theme.particles}`}
+              initial={{ 
+                x: `${Math.random() * 100}%`, 
+                y: `${Math.random() * 100}%`,
+                opacity: Math.random() * 0.5 + 0.1
+              }}
+              animate={{ 
+                x: [`${Math.random() * 100}%`, `${Math.random() * 100}%`],
+                y: [`${Math.random() * 100}%`, `${Math.random() * 100}%`],
+                opacity: [0.2, 0.8, 0.2]
+              }}
+              transition={{
+                duration: 10 + Math.random() * 10,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+          ))}
+
           {timePhase === 'night' && (
              <div className="absolute top-10 right-10 text-indigo-200/30"><Stars className="w-10 h-10" /></div>
           )}

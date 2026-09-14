@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronLeft, Trophy, Info } from 'lucide-react'
+import { ChevronLeft, Trophy, } from 'lucide-react'
 import { gameService } from '../../services/gameService'
 import { useCurrentProfile } from '../../hooks/useCurrentProfile'
-import { GameRulesModal } from './GameRulesModal'
 
 interface Balloon {
   id: number
@@ -26,8 +25,6 @@ export function PopBalloons({ onBack }: { onBack: () => void }) {
   const [timeLeft, setTimeLeft] = useState(30)
   const [balloons, setBalloons] = useState<Balloon[]>([])
   const [highScore, setHighScore] = useState<number>(0)
-  const [rulesOpen, setRulesOpen] = useState(false)
-
   const { profile } = useCurrentProfile()
 
   useEffect(() => {
@@ -94,11 +91,7 @@ export function PopBalloons({ onBack }: { onBack: () => void }) {
           <ChevronLeft className="w-5 h-5 -ml-0.5" />
         </button>
         <h1 className="text-xl font-serif text-deepPlum font-medium">Pop Balloons</h1>
-        <div className="flex items-center gap-3 text-deepPlum">
-          <button onClick={() => setRulesOpen(true)} className="p-1 hover:bg-black/5 rounded-full transition-colors">
-            <Info className="w-5 h-5 text-deepPlum/60" />
-          </button>
-          <div className="w-10 flex justify-end items-center gap-1">
+        <div className="flex items-center gap-3 text-deepPlum">          <div className="w-10 flex justify-end items-center gap-1">
             <Trophy className="w-4 h-4 text-sunflower" />
             <span className="text-sm font-bold">{highScore}</span>
           </div>
@@ -156,18 +149,6 @@ export function PopBalloons({ onBack }: { onBack: () => void }) {
           )}
         </div>
       </div>
-
-      <GameRulesModal 
-        isOpen={rulesOpen}
-        onClose={() => setRulesOpen(false)}
-        title="Pop Balloons"
-        rules={[
-          "Pop as many balloons as you can before the time runs out.",
-          "Different colors give different points.",
-          "Watch out for the dark balloon – it takes away 20 points!",
-          "Highest score in 30 seconds wins."
-        ]}
-      />
     </div>
   )
 }

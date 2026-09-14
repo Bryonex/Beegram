@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ChevronLeft, Trophy } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { GameRulesModal } from './GameRulesModal'
 import { gameService } from '../../services/gameService'
 import { useCurrentProfile } from '../../hooks/useCurrentProfile'
 import { useToast } from '../../contexts/ToastContext'
@@ -10,7 +9,6 @@ const width = 8
 const candyColors = ['🍬', '🍭', '🍫', '🍩', '🍪', '🧁']
 
 export function CandyCrush({ onBack }: { onBack: () => void }) {
-  const [showRules, setShowRules] = useState(true)
   const [board, setBoard] = useState<string[]>([])
   const [score, setScore] = useState(0)
   const [highScore, setHighScore] = useState(0)
@@ -180,16 +178,6 @@ export function CandyCrush({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-[#FFF5F5] flex flex-col pt-safe">
-      <GameRulesModal
-        isOpen={showRules}
-        title="Sweet Match"
-        rules={[
-          "Tap a candy, then tap an adjacent one to swap.",
-          "Match 3 or more of the same to clear them.",
-          "Score as many points as you can!"
-        ]}
-        onClose={() => setShowRules(false)}
-      />
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 bg-white/50 backdrop-blur-md border-b border-black/5">

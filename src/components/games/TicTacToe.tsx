@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronLeft, RotateCcw, User, Cpu, Info } from 'lucide-react'
-import { GameRulesModal } from './GameRulesModal'
+import { ChevronLeft, RotateCcw, User, Cpu, } from 'lucide-react'
 
 type Player = 'X' | 'O' | null
 type Mode = 'local' | 'ai'
@@ -11,8 +10,6 @@ export function TicTacToe({ onBack }: { onBack: () => void }) {
   const [xIsNext, setXIsNext] = useState<boolean>(true)
   const [mode, setMode] = useState<Mode>('ai')
   const [winner, setWinner] = useState<Player | 'draw' | null>(null)
-  const [rulesOpen, setRulesOpen] = useState(false)
-
   const checkWinner = (squares: Player[]) => {
     const lines = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -124,11 +121,7 @@ export function TicTacToe({ onBack }: { onBack: () => void }) {
           <ChevronLeft className="w-5 h-5 -ml-0.5" />
         </button>
         <h1 className="text-xl font-serif text-deepPlum font-medium">Tic Tac Toe</h1>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setRulesOpen(true)} className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-deepPlum/70">
-            <Info className="w-5 h-5" />
-          </button>
-          <button onClick={reset} className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-deepPlum/70">
+        <div className="flex items-center gap-2">          <button onClick={reset} className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-deepPlum/70">
             <RotateCcw className="w-5 h-5" />
           </button>
         </div>
@@ -184,17 +177,6 @@ export function TicTacToe({ onBack }: { onBack: () => void }) {
           ))}
         </div>
       </div>
-
-      <GameRulesModal 
-        isOpen={rulesOpen}
-        onClose={() => setRulesOpen(false)}
-        title="Tic Tac Toe"
-        rules={[
-          "Get three in a row (horizontally, vertically, or diagonally) to win.",
-          "Play against the AI or pass-and-play with a friend.",
-          "X always goes first."
-        ]}
-      />
     </div>
   )
 }

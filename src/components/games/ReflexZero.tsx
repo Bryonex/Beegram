@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, Info } from 'lucide-react'
+import { ChevronLeft} from 'lucide-react'
 import { gameService } from '../../services/gameService'
 import { useCurrentProfile } from '../../hooks/useCurrentProfile'
-import { GameRulesModal } from './GameRulesModal'
 
 type GameState = 'MENU' | 'READY' | 'STAREDOWN' | 'STRIKE' | 'FEINT' | 'RESULT' | 'GAMEOVER'
 type Difficulty = 'WANDERER' | 'WARRIOR' | 'DEMON'
@@ -24,7 +23,6 @@ export function ReflexZero({ onBack }: { onBack: () => void }) {
   const [bestScore, setBestScore] = useState<number>(0)
   const [resultMsg, setResultMsg] = useState('')
   const [visualEffect, setVisualEffect] = useState<'none' | 'flash' | 'slash' | 'shake' | 'feint'>('none')
-  const [rulesOpen, setRulesOpen] = useState(false)
 
   const { profile } = useCurrentProfile()
 
@@ -270,12 +268,6 @@ export function ReflexZero({ onBack }: { onBack: () => void }) {
           <ChevronLeft className="w-5 h-5 -ml-0.5" />
         </button>
         <div className="flex items-center gap-3">
-          <button 
-            onClick={(e) => { e.stopPropagation(); setRulesOpen(true); }}
-            className="w-8 h-8 rounded-full bg-[#2D2A3B] shadow-sm flex items-center justify-center text-[#E5484D] hover:bg-[#3A364C] transition-colors"
-          >
-            <Info className="w-4 h-4" />
-          </button>
           <div className="text-right">
             <div className="text-[#E5484D] font-serif text-sm opacity-80 uppercase tracking-widest">ReflexZero</div>
             <div className="text-[#D8D4CF] text-xs font-sans">Don't blink.</div>
@@ -401,20 +393,6 @@ export function ReflexZero({ onBack }: { onBack: () => void }) {
           Tap anywhere to strike
         </div>
       )}
-
-      <GameRulesModal 
-        isOpen={rulesOpen}
-        onClose={() => setRulesOpen(false)}
-        title="ReflexZero"
-        rules={[
-          "Wait for the STRIKE signal.",
-          "Tap anywhere on the screen as fast as possible when it appears.",
-          "Do not tap before the signal, or you lose.",
-          "Watch out for feints (!!) – do not strike on a feint.",
-          "As your streak increases, your reaction window gets shorter.",
-          "Higher difficulties offer less reaction time but higher scores."
-        ]}
-      />
     </div>
   )
 }
