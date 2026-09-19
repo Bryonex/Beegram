@@ -50,14 +50,6 @@ export default function Songs() {
             <p className="text-[10px] text-lavender-pale/40 mt-1 font-serif italic tracking-wider">#ourlittleplaylist</p>
           </div>
           
-          <motion.button 
-            whileTap={{ scale: 0.9 }}
-            className="px-4 py-2 rounded-full bg-lavender-dark/30 border border-lavender-dark/50 flex items-center justify-center text-lavender-pale hover:bg-lavender-dark/50 transition-colors shadow-soft shrink-0 gap-2"
-            onClick={() => setIsUploading(true)}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="text-sm font-medium">Add Song</span>
-          </motion.button>
         </motion.div>
 
         {/* Featured Player */}
@@ -85,6 +77,17 @@ export default function Songs() {
         </motion.div>
 
       </div>
+
+      {/* FAB Add Song */}
+      <motion.button 
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        whileTap={{ scale: 0.9 }}
+        className="fixed z-40 right-6 bottom-[calc(5rem+env(safe-area-inset-bottom))] w-14 h-14 rounded-full bg-lavender-mist text-midnightPlum flex items-center justify-center shadow-float shadow-lavender-mist/20 border border-white/10"
+        onClick={() => setIsUploading(true)}
+      >
+        <Plus className="w-6 h-6" strokeWidth={2.5} />
+      </motion.button>
 
       <AnimatePresence>
         {isUploading && (

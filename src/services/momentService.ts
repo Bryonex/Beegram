@@ -18,13 +18,18 @@ export const momentService = {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
+    const { data: profileData } = await (supabase as any).from('profiles').select('id, relationship_id, display_name').eq('id', user.id).single()
+    if (!profileData?.relationship_id) return []
+
+    const { data: allProfiles } = await (supabase as any).from('profiles').select('id, display_name').eq('relationship_id', profileData.relationship_id)
+    const profileMap = new Map((allProfiles || []).map((p: any) => [p.id, p.display_name]))
+
     const { data, error } = await (supabase as any)
       .from('moments')
       .select(`
         id, relationship_id, user_id, title, description, media_url, media_type, location, occurred_on, created_at,
-        profiles!moments_user_id_fkey ( display_name ),
-        moment_reactions ( id, user_id, created_at, profiles!moment_reactions_user_id_fkey ( display_name ) ),
-        moment_comments ( id, author_id, content, created_at, profiles!moment_comments_author_id_fkey ( display_name ) )
+        moment_reactions ( id, user_id, created_at ),
+        moment_comments ( id, author_id, content, created_at )
       `)
       .order('created_at', { ascending: false })
     if (error) throw error
@@ -35,7 +40,7 @@ export const momentService = {
         id: m.id,
         relationshipId: m.relationship_id,
         authorId: m.user_id,
-        authorName: m.profiles?.display_name || 'Unknown',
+        authorName: profileMap.get(m.user_id) || 'Unknown',
         caption: m.description || m.title || '',
         location: m.location || undefined,
         date: m.occurred_on || m.created_at,
@@ -51,14 +56,14 @@ export const momentService = {
           id: reaction.id,
           momentId: m.id,
           authorId: reaction.user_id,
-          authorName: reaction.profiles?.display_name || 'Unknown',
+          authorName: profileMap.get(reaction.user_id) || 'Unknown',
           createdAt: reaction.created_at,
         })),
         comments: (m.moment_comments || []).map((comment: any) => ({
           id: comment.id,
           momentId: m.id,
           authorId: comment.author_id,
-          authorName: comment.profiles?.display_name || 'Unknown',
+          authorName: profileMap.get(comment.author_id) || 'Unknown',
           text: comment.content,
           createdAt: comment.created_at,
         })).sort((a: MomentComment, b: MomentComment) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
@@ -151,9 +156,11 @@ export const momentService = {
     const { data, error } = await (supabase as any)
       .from('moment_reactions')
       .insert({ moment_id: momentId, user_id: user.id })
-      .select('id, user_id, created_at, profiles!moment_reactions_user_id_fkey ( display_name )')
+      .select('id, user_id, created_at')
       .single()
     if (error) throw error
+
+    const { data: profile } = await (supabase as any).from('profiles').select('display_name').eq('id', user.id).single()
 
     // Fetch moment author and relationship_id to notify them
     const { data: momentData } = await (supabase as any).from('moments').select('user_id, relationship_id').eq('id', momentId).single()
@@ -162,7 +169,7 @@ export const momentService = {
         momentData.user_id,
         momentData.relationship_id,
         'moment_like',
-        `${data.profiles?.display_name || 'Your partner'} liked your moment`
+        `${profile?.display_name || 'Your partner'} liked your moment`
       )
     }
 
@@ -170,7 +177,7 @@ export const momentService = {
       id: data.id,
       momentId,
       authorId: data.user_id,
-      authorName: data.profiles?.display_name || 'Unknown',
+      authorName: profile?.display_name || 'Unknown',
       createdAt: data.created_at,
     }
   },
@@ -193,9 +200,11 @@ export const momentService = {
     const { data, error } = await (supabase as any)
       .from('moment_comments')
       .insert({ moment_id: momentId, author_id: user.id, content: content.trim() })
-      .select('id, author_id, content, created_at, profiles!moment_comments_author_id_fkey ( display_name )')
+      .select('id, author_id, content, created_at')
       .single()
     if (error) throw error
+
+    const { data: profile } = await (supabase as any).from('profiles').select('display_name').eq('id', user.id).single()
 
     // Fetch moment author and relationship_id to notify them
     const { data: momentData } = await (supabase as any).from('moments').select('user_id, relationship_id').eq('id', momentId).single()
@@ -204,7 +213,7 @@ export const momentService = {
         momentData.user_id,
         momentData.relationship_id,
         'moment_comment',
-        `${data.profiles?.display_name || 'Your partner'} commented on your moment`
+        `${profile?.display_name || 'Your partner'} commented on your moment`
       )
     }
 
@@ -212,7 +221,7 @@ export const momentService = {
       id: data.id,
       momentId,
       authorId: data.author_id,
-      authorName: data.profiles?.display_name || 'Unknown',
+      authorName: profile?.display_name || 'Unknown',
       text: data.content,
       createdAt: data.created_at,
     }

@@ -232,7 +232,11 @@ useEffect(() => {
                   <Navigation className="w-4 h-4" />
                   Heading
                 </span>
-                <span className="text-deepPlum font-medium">{Math.round(heading)}° NNE</span>
+                <span className="text-deepPlum font-medium">{Math.round(heading)}° {(() => {
+                  const val = Math.floor((heading / 22.5) + 0.5);
+                  const arr = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+                  return arr[(val % 16)];
+                })()}</span>
               </div>
             </motion.div>
             
