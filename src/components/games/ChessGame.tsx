@@ -71,11 +71,16 @@ export function ChessGame({ onBack }: { onBack: () => void }) {
     if (game.isGameOver() || game.turn() !== 'w' || piece?.startsWith('b')) return false
 
     const gameCopy = new Chess(game.fen())
-    const move = gameCopy.move({
-      from: sourceSquare,
-      to: targetSquare,
-      promotion: 'q' // always promote to queen for simplicity
-    })
+    let move = null
+    try {
+      move = gameCopy.move({
+        from: sourceSquare,
+        to: targetSquare,
+        promotion: 'q' // always promote to queen for simplicity
+      })
+    } catch (e) {
+      return false
+    }
 
     if (move === null) return false
 

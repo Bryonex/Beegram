@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Eye, EyeOff, KeyRound, UserRound } from 'lucide-react'
+import { Eye, EyeOff, KeyRound, Lock } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import heroImg from '../../assets/hero.png'
@@ -118,13 +118,13 @@ export function Login() {
             </motion.div>
           </motion.div>
           <h1 className="text-3xl font-serif text-deepPlum mb-2">Beegram</h1>
-          <p className="text-deepPlum/60 text-sm font-sans italic">🔑 Enter our private space 🔒</p>
+          <p className="text-deepPlum/60 text-sm font-sans italic">Enter our private space</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="mb-2">
             <div className="relative">
-              <UserRound className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-deepPlum/70" />
+              <KeyRound className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-deepPlum/70" />
               <input
                 type="text"
                 value={username}
@@ -137,7 +137,7 @@ export function Login() {
             </div>
           </div>
           <div className="relative">
-            <KeyRound className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-deepPlum/70" />
+            <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-deepPlum/70" />
             <input
               type={showPassword ? 'text' : 'password'}
               value={password}
