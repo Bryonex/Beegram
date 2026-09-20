@@ -35,7 +35,6 @@ export default function Doodle() {
   const [, setUndoneStrokes] = useState<Stroke[]>([])
   const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null)
 
-  const [loadedImageUrl, setLoadedImageUrl] = useState<string | null>(null)
 
   useEffect(() => {
     // Load previously saved doodle

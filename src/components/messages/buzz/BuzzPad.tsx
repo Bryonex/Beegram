@@ -7,7 +7,7 @@ import { gardenService } from '../../../services/gardenService'
 import { useToast } from '../../../contexts/ToastContext'
 
 export function BuzzPad() {
-  const { profile } = useCurrentProfile()
+  const { profile, partner } = useCurrentProfile()
   const currentUserId = profile?.id
   const relationshipId = profile?.relationship_id
   
@@ -90,7 +90,7 @@ export function BuzzPad() {
       
       setCooldown(1)
       const successMsg = customMessage.trim() || activeMessage
-      success(`Sent "${successMsg}" to ${profile.partner?.display_name || 'them'} 💗`)
+      success(`Sent "${successMsg}" to ${partner?.display_name || 'them'} 💗`)
       setCustomMessage('')
       
       // Stop pulsing, animate press down

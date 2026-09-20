@@ -52,8 +52,7 @@ export function ChatBox() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  
-  const { profile } = useCurrentProfile()
+  const { profile, partner } = useCurrentProfile()
   const { currentTrack, isMiniPlayerMinimized } = useAudioPlayer()
   const { error: toastError } = useToast()
   
@@ -316,10 +315,10 @@ export function ChatBox() {
         ) : (
           messages.map((msg) => {
             const isOwn = msg.user_id === currentUserId
-            const senderAvatar = isOwn ? profile?.avatar_url : profile?.partner?.avatar_url
+            const senderAvatar = isOwn ? profile?.avatar_url : partner?.avatar_url
             const initial = isOwn 
               ? (profile?.display_name?.charAt(0) || 'M') 
-              : (profile?.partner?.display_name?.charAt(0) || '?')
+              : (partner?.display_name?.charAt(0) || '?')
 
             return (
               <div key={msg.id} className={`flex w-full ${isOwn ? 'justify-end' : 'justify-start'} mb-1`}>
