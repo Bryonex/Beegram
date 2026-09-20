@@ -79,7 +79,10 @@ export const messageService = {
     // Map chat_reactions to reactions
     const mapped = (data as any[]).map(msg => ({
       ...msg,
-      reactions: msg.chat_reactions || []
+      reactions: (msg.chat_reactions || []).map((reaction: any) => ({
+        ...reaction,
+        emoji: reaction.emoji || reaction.reaction,
+      }))
     }))
     
     return Promise.all((mapped as ChatMessage[]).map(hydrateChatMessage))
@@ -235,7 +238,7 @@ export const messageService = {
       .select('id')
       .eq('message_id', messageId)
       .eq('user_id', userId)
-      .eq('emoji', emoji)
+      .eq('reaction', emoji)
       .maybeSingle()
 
     if (existing) {
@@ -247,7 +250,7 @@ export const messageService = {
       const { error } = await (supabase as any).from('chat_reactions').insert({
         message_id: messageId,
         user_id: userId,
-        emoji
+        reaction: emoji
       })
       if (error) throw error
     }

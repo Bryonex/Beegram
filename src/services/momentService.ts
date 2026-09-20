@@ -242,19 +242,23 @@ export const momentService = {
     if (fetchError) throw fetchError
     if (moment.user_id !== user.id) throw new Error('You can only delete your own moments')
 
-    // Delete the media file
+    // Delete the row first and verify RLS actually removed it. Child comments
+    // and reactions are removed by the database cascade.
+    const { data: deletedMoment, error: deleteError } = await (supabase as any)
+      .from('moments')
+      .delete()
+      .eq('id', momentId)
+      .eq('user_id', user.id)
+      .select('id')
+      .maybeSingle()
+
+    if (deleteError) throw deleteError
+    if (!deletedMoment) throw new Error('Moment was not deleted. Check the database delete policy.')
+
     if (moment.media_url) {
       const { error: storageError } = await supabase.storage.from('moments').remove([moment.media_url])
       if (storageError) throw storageError
     }
-
-    // Delete the moment (cascades to comments/reactions via DB constraints)
-    const { error: deleteError } = await (supabase as any)
-      .from('moments')
-      .delete()
-      .eq('id', momentId)
-
-    if (deleteError) throw deleteError
   },
 
   async editMoment(momentId: string, updates: { caption?: string, location?: string, date?: string }): Promise<void> {

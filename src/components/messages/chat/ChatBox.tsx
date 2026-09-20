@@ -106,7 +106,10 @@ export function ChatBox() {
         if (payload.eventType === 'INSERT') {
           setMessages(prev => prev.map(m => m.id === payload.new.message_id ? {
             ...m,
-            reactions: [...(m.reactions || []), payload.new as any]
+            reactions: [...(m.reactions || []), {
+              ...payload.new as any,
+              emoji: payload.new.emoji || payload.new.reaction,
+            }]
           } : m))
         } else if (payload.eventType === 'DELETE') {
           setMessages(prev => prev.map(m => {
