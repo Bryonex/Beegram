@@ -290,37 +290,38 @@ export function FishCatch({ onBack }: FishCatchProps) {
           className="absolute inset-0 w-full h-full"
         />
 
-        {/* Start / Game Over Screens */}
-        <AnimatePresence>
-          {!isPlaying && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-            >
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-3xl flex flex-col items-center text-white max-w-sm w-full mx-5 shadow-2xl">
-                <h2 className="text-4xl font-black mb-2">{gameOver ? 'GAME OVER' : 'FISH CATCH'}</h2>
-                
-                {gameOver && (
-                  <div className="text-center my-6">
-                    <p className="text-lg opacity-80 font-medium">Final Score</p>
-                    <p className="text-5xl font-black text-amber-300">{score}</p>
-                    <p className="text-sm opacity-60 mt-2">Best: {Math.max(score, bestScore)}</p>
-                  </div>
-                )}
-
-                <button 
-                  onClick={startGame}
-                  className="w-full py-4 rounded-full bg-white text-blue-600 font-bold text-lg hover:bg-blue-50 active:scale-95 transition-all shadow-lg mt-4"
-                >
-                  {gameOver ? 'PLAY AGAIN' : 'START'}
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      {/* Start / Game Over Screens */}
+      <AnimatePresence>
+        {!isPlaying && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50 pointer-events-auto"
+          >
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-3xl flex flex-col items-center text-white max-w-sm w-full mx-5 shadow-2xl">
+              <h2 className="text-4xl font-black mb-2">{gameOver ? 'GAME OVER' : 'FISH CATCH'}</h2>
+              
+              {gameOver && (
+                <div className="text-center my-6">
+                  <p className="text-lg opacity-80 font-medium">Final Score</p>
+                  <p className="text-5xl font-black text-amber-300">{score}</p>
+                  <p className="text-sm opacity-60 mt-2">Best: {Math.max(score, bestScore)}</p>
+                </div>
+              )}
+
+              <button 
+                onClick={startGame}
+                className="w-full py-4 rounded-full bg-white text-blue-600 font-bold text-lg hover:bg-blue-50 active:scale-95 transition-all shadow-lg mt-4 cursor-pointer"
+              >
+                {gameOver ? 'PLAY AGAIN' : 'START'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

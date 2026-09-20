@@ -9,7 +9,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'ghochou.jpeg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'],
+      includeAssets: ['ghochou.jpeg'],
       manifest: {
         name: 'Beegram',
         short_name: 'Beegram',
@@ -21,19 +21,19 @@ export default defineConfig({
         scope: '/',
         icons: [
           {
-            src: 'icon-192.png',
+            src: 'ghochou.jpeg',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/jpeg'
           },
           {
-            src: 'icon-512.png',
+            src: 'ghochou.jpeg',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/jpeg'
           },
           {
-            src: 'icon-512.png',
+            src: 'ghochou.jpeg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/jpeg',
             purpose: 'any maskable'
           }
         ]

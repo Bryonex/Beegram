@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Heart, MessageCircle, Play } from 'lucide-react'
+import { Heart, MessageCircle, Play, MoreHorizontal, Trash2, Edit2 } from 'lucide-react'
 import type { Moment, MomentComment } from '../../types/moments'
 import { MediaGallery } from './MediaGallery'
 import { CommentsSheet } from './CommentsSheet'
@@ -9,17 +9,26 @@ import { useToast } from '../../contexts/ToastContext'
 
 interface Props {
   moment: Moment
+  onDelete?: (id: string) => void
 }
 
-export function MomentCard({ moment: initialMoment }: Props) {
+export function MomentCard({ moment: initialMoment, onDelete }: Props) {
   const [moment, setMoment] = useState(initialMoment)
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [initialGalleryIndex, setInitialGalleryIndex] = useState(0)
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [isLiking, setIsLiking] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editCaption, setEditCaption] = useState(initialMoment.caption || '')
+  const [editLocation, setEditLocation] = useState(initialMoment.location || '')
+  const [editDate, setEditDate] = useState(initialMoment.date?.substring(0, 10) || new Date().toISOString().substring(0, 10))
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
 
   const { profile } = useCurrentProfile()
-  const { error } = useToast()
+  const { error, success } = useToast()
   
   const hasLiked = profile && moment.reactions.some(r => r.authorId === profile.id)
 
@@ -46,6 +55,49 @@ export function MomentCard({ moment: initialMoment }: Props) {
       error('Failed to update like status')
     } finally {
       setIsLiking(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!isMe || isDeleting) return
+
+    setIsDeleting(true)
+    try {
+      await momentService.deleteMoment(moment.id)
+      success('Moment deleted')
+      setConfirmDeleteOpen(false)
+      if (onDelete) onDelete(moment.id)
+    } catch (err) {
+      console.error('Failed to delete moment', err)
+      error('Could not delete moment')
+    } finally {
+      setIsDeleting(false)
+      setMenuOpen(false)
+    }
+  }
+
+  const handleEdit = async () => {
+    if (!isMe || isSavingEdit) return
+    setIsSavingEdit(true)
+    try {
+      await momentService.editMoment(moment.id, {
+        caption: editCaption,
+        location: editLocation,
+        date: new Date(editDate).toISOString()
+      })
+      setMoment(prev => ({
+        ...prev,
+        caption: editCaption,
+        location: editLocation,
+        date: new Date(editDate).toISOString()
+      }))
+      success('Moment updated')
+      setIsEditing(false)
+    } catch (err) {
+      console.error('Failed to update moment', err)
+      error('Could not update moment')
+    } finally {
+      setIsSavingEdit(false)
     }
   }
 
@@ -138,7 +190,7 @@ export function MomentCard({ moment: initialMoment }: Props) {
 
   return (
     <>
-      <div className="w-full bg-white rounded-3xl p-4 shadow-sm border border-rose-base/50">
+      <div className={`w-full bg-white rounded-3xl p-4 shadow-sm border ${isDeleting ? 'opacity-50' : ''} border-rose-base/50`}>
         
         {/* Header */}
         <div className="flex justify-between items-start mb-3 px-1">
@@ -148,23 +200,108 @@ export function MomentCard({ moment: initialMoment }: Props) {
               <p className="text-[10px] uppercase tracking-widest text-rose-dusty/60 font-sans mt-0.5">{moment.location}</p>
             )}
           </div>
-          <div className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-bold ${
-            isMe ? 'bg-rose-base text-rose-dusty' : 'bg-rose-pink/15 text-rose-pink'
-          }`}>
-            BY {moment.authorName || moment.authorId}
+          <div className="flex items-center gap-2">
+            <div className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-bold ${
+              isMe ? 'bg-rose-base text-rose-dusty' : 'bg-rose-pink/15 text-rose-pink'
+            }`}>
+              BY {moment.authorName || moment.authorId}
+            </div>
+            
+            {isMe && (
+              <div className="relative">
+                <button 
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="w-6 h-6 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+                
+                {menuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                    <div className="absolute right-0 top-8 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-20 py-1">
+                      <button 
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setIsEditing(true);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        Edit Moment
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setConfirmDeleteOpen(true);
+                        }}
+                        disabled={isDeleting}
+                        className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Moment
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Media */}
-        {renderMedia()}
-
-        {/* Caption */}
-        {moment.caption && (
-          <div className="mt-4 px-2">
-            <p className="text-sm font-serif leading-relaxed text-rose-plum/90">
-              {moment.caption}
-            </p>
+        {isEditing ? (
+          <div className="mt-4 px-2 space-y-4">
+            <textarea
+              value={editCaption}
+              onChange={(e) => setEditCaption(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-deepPlum focus:outline-none focus:border-rose-plum/40 resize-none min-h-[80px]"
+              placeholder="Caption"
+            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={editLocation}
+                onChange={(e) => setEditLocation(e.target.value)}
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-deepPlum focus:outline-none focus:border-rose-plum/40"
+                placeholder="Location"
+              />
+              <input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-deepPlum focus:outline-none focus:border-rose-plum/40"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setIsEditing(false)}
+                className="flex-1 py-2 bg-gray-100 rounded-lg text-sm font-medium text-gray-600"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleEdit}
+                disabled={isSavingEdit}
+                className="flex-1 py-2 bg-rose-plum rounded-lg text-sm font-medium text-white flex items-center justify-center"
+              >
+                {isSavingEdit ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Save'}
+              </button>
+            </div>
           </div>
+        ) : (
+          <>
+            {/* Media */}
+            {renderMedia()}
+    
+            {/* Caption */}
+            {moment.caption && (
+              <div className="mt-4 px-2">
+                <p className="text-sm font-serif leading-relaxed text-rose-plum/90">
+                  {moment.caption}
+                </p>
+              </div>
+            )}
+          </>
         )}
 
         {/* Footer actions */}
@@ -204,6 +341,40 @@ export function MomentCard({ moment: initialMoment }: Props) {
           onClose={() => setCommentsOpen(false)}
           onCommentAdded={handleCommentAdded}
         />
+      )}
+
+      {confirmDeleteOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mb-4">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-deepPlum mb-2">Delete Moment?</h3>
+            <p className="text-sm text-deepPlum/70 mb-6">
+              Are you sure you want to delete this memory? This cannot be undone.
+            </p>
+            <div className="w-full flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteOpen(false)}
+                className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center justify-center"
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )

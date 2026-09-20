@@ -115,7 +115,11 @@ export default function Moments() {
             </div>
           ) : (
             moments.map(moment => (
-              <MomentCard key={moment.id} moment={moment} />
+              <MomentCard 
+                key={moment.id} 
+                moment={moment} 
+                onDelete={(id) => setMoments(prev => prev.filter(m => m.id !== id))}
+              />
             ))
           )}
         </motion.div>

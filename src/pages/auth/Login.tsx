@@ -67,8 +67,14 @@ export function Login() {
         <div className="absolute top-1/4 -left-20 w-72 h-72 bg-[#DED6E8]/30 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-[#FFE4E1]/20 rounded-full blur-3xl pointer-events-none" />
         
-        <div className="flex flex-col items-center z-10 animate-pulse">
-          <div className="text-4xl mb-4 animate-bounce">🐝</div>
+        <div className="flex flex-col items-center z-10">
+          <motion.div 
+            animate={{ y: [0, -10, 0] }}
+            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+            className="text-4xl mb-4"
+          >
+            🐝
+          </motion.div>
           <p className="font-serif text-[#4A3219]/60 tracking-wider">Loading our world...</p>
         </div>
       </div>
@@ -88,12 +94,16 @@ export function Login() {
       >
         <div className="text-center mb-10">
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="w-32 h-32 mx-auto mb-6 rounded-full bg-white shadow-xl p-2 relative"
+            initial={{ scale: 0.9, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.8, ease: "easeOut" }}
+            className="w-32 h-32 mx-auto mb-6 rounded-full bg-white shadow-2xl shadow-blush/30 p-2 relative"
           >
-            <div className="w-full h-full rounded-full overflow-hidden relative">
+            <motion.div 
+              animate={{ y: [-3, 3, -3] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+              className="w-full h-full rounded-full overflow-hidden relative"
+            >
               <img 
                 src={loginHero}
                 alt="Beegram Mascot"
@@ -102,15 +112,18 @@ export function Login() {
                   e.currentTarget.src = heroImg
                 }}
               />
-              <div className="absolute inset-0 bg-lavender-deep/10 mix-blend-overlay" />
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-tr from-lavender-deep/20 to-transparent mix-blend-overlay" />
+            </motion.div>
           </motion.div>
           <h1 className="text-3xl font-serif text-deepPlum mb-2">Beegram</h1>
-          <p className="text-deepPlum/60 text-sm font-sans italic">Enter our private space</p>
+          <p className="text-deepPlum/60 text-sm font-sans italic">A little place that belongs to us</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
-          <div>
+          <div className="mb-2">
+            <label className="block text-[10px] font-bold text-deepPlum/70 uppercase tracking-widest mb-1.5 px-1">
+              Your Beegram Name
+            </label>
             <input
               type="text"
               value={username}
@@ -120,6 +133,9 @@ export function Login() {
               required
               className="w-full px-5 py-3.5 bg-white/70 border border-lavender-mist/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-lavender-soft/50 focus:bg-white text-deepPlum placeholder-deepPlum/40 transition-all shadow-sm backdrop-blur-sm"
             />
+            <p className="text-[10px] text-deepPlum/50 italic mt-1.5 px-1">
+              the name you use to enter our little world
+            </p>
           </div>
           <div className="relative">
             <input

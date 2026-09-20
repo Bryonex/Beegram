@@ -84,15 +84,15 @@ export function ChatBox() {
     if (!profile?.relationship_id || !currentUserId) return
 
     // Realtime subscriptions
-    const channel = supabase.channel(`chat:${profile.relationship_id}`)
+    const chatChannel = supabase.channel(`chat:${profile.relationship_id}`)
       
-    channel
+    chatChannel
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `relationship_id=eq.${profile.relationship_id}` }, payload => {
         if (payload.eventType === 'INSERT') {
           const newMsg = payload.new as ChatMessage
           setMessages(prev => {
             if (prev.find(m => m.id === newMsg.id)) return prev
-            return [...prev, newMsg]
+            return [...prev, { ...newMsg, reactions: [] }]
           })
           if (newMsg.recipient_id === currentUserId) {
             messageService.markMessageRead(newMsg.id)
@@ -101,8 +101,25 @@ export function ChatBox() {
           setMessages(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m))
         }
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_reactions' }, payload => {
+        // We reload messages for simplicity or manually patch
+        if (payload.eventType === 'INSERT') {
+          setMessages(prev => prev.map(m => m.id === payload.new.message_id ? {
+            ...m,
+            reactions: [...(m.reactions || []), payload.new as any]
+          } : m))
+        } else if (payload.eventType === 'DELETE') {
+          setMessages(prev => prev.map(m => {
+            if (!m.reactions?.some(r => r.id === payload.old.id)) return m
+            return {
+              ...m,
+              reactions: m.reactions.filter(r => r.id !== payload.old.id)
+            }
+          }))
+        }
+      })
       .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState()
+        const state = chatChannel.presenceState()
         let partnerTyping = false
         for (const id in state) {
           if (state[id].some((p: any) => p.user_id !== currentUserId && p.typing)) {
@@ -113,12 +130,12 @@ export function ChatBox() {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          await channel.track({ user_id: currentUserId, typing: false })
+          await chatChannel.track({ user_id: currentUserId, typing: false })
         }
       })
 
     return () => {
-      supabase.removeChannel(channel)
+      supabase.removeChannel(chatChannel)
     }
   }, [profile?.relationship_id, currentUserId])
 
@@ -156,7 +173,7 @@ export function ChatBox() {
     setMessageText('')
     updateTypingStatus(false)
     
-    if (editingMessageId) {
+      if (editingMessageId) {
       // Edit message
       const msgId = editingMessageId
       setEditingMessageId(null)
@@ -166,6 +183,8 @@ export function ChatBox() {
           .update({ content, edited_at: new Date().toISOString() })
           .eq('id', msgId)
         if (error) throw error
+        // success toast available from useToast() hook but it's not imported here yet, wait I did import it as { success, error: toastError }
+        // oh wait, I only destructured `error: toastError`. Let me destructure `success`.
       } catch (e) {
         console.error(e)
         toastError("Couldn't edit message.")
@@ -264,6 +283,21 @@ export function ChatBox() {
     setMessageText(msg.content || '')
   }
 
+  const [activeReactionMsgId, setActiveReactionMsgId] = useState<string | null>(null)
+
+  const handleReact = async (msgId: string, emoji: string) => {
+    if (!currentUserId) return
+    setActiveReactionMsgId(null)
+    try {
+      await messageService.toggleReaction(msgId, currentUserId, emoji)
+    } catch (e) {
+      console.error(e)
+      toastError("Failed to react")
+    }
+  }
+
+  const REACTION_EMOJIS = ['❤️', '😂', '🥺', '🔥', '🐝', '👍']
+
   return (
     <div className="w-full flex flex-col flex-1 bg-[#f8f9fa] relative pt-2">
       {/* Messages Area */}
@@ -279,12 +313,22 @@ export function ChatBox() {
         ) : (
           messages.map((msg) => {
             const isOwn = msg.user_id === currentUserId
+            const senderAvatar = isOwn ? profile?.avatar_url : profile?.partner?.avatar_url
+            const initial = isOwn 
+              ? (profile?.display_name?.charAt(0) || 'M') 
+              : (profile?.partner?.display_name?.charAt(0) || '?')
+
             return (
-              <div key={msg.id} className={`flex w-full ${isOwn ? 'justify-end' : 'justify-start'}`}>
+              <div key={msg.id} className={`flex w-full ${isOwn ? 'justify-end' : 'justify-start'} mb-1`}>
+                {!isOwn && (
+                  <div className="w-6 h-6 rounded-full overflow-hidden bg-blush/30 shrink-0 mr-2 self-end mb-1 border border-white/50 shadow-sm flex items-center justify-center">
+                    {senderAvatar ? <img src={senderAvatar} alt="Partner" className="w-full h-full object-cover"/> : <span className="text-[10px] text-deepPlum/60 font-medium">{initial}</span>}
+                  </div>
+                )}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`max-w-[80%] relative px-4 py-2.5 shadow-sm flex flex-col group
+                  className={`max-w-[75%] relative px-3.5 py-2.5 shadow-sm flex flex-col group
                     ${isOwn 
                       ? 'bg-lavender-dark text-white rounded-[1.2rem] rounded-br-sm' 
                       : 'bg-white text-deepPlum rounded-[1.2rem] rounded-bl-sm border border-blush/20'
@@ -300,10 +344,10 @@ export function ChatBox() {
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {isOwn && (
-                      <span className="ml-0.5">
-                        {(!msg.delivered_at && !msg.read_at) && <Check className="w-3 h-3" />}
-                        {(msg.delivered_at && !msg.read_at) && <CheckCheck className="w-3 h-3" />}
-                        {msg.read_at && <CheckCheck className="w-3 h-3 text-blue-300" />}
+                      <span className="ml-0.5 flex">
+                        {(!msg.delivered_at && !msg.read_at) && <Check className="w-[11px] h-[11px]" />}
+                        {(msg.delivered_at && !msg.read_at) && <CheckCheck className="w-[11px] h-[11px]" />}
+                        {msg.read_at && <CheckCheck className="w-[11px] h-[11px] text-blue-300" />}
                       </span>
                     )}
                   </div>
@@ -316,7 +360,58 @@ export function ChatBox() {
                       <Edit2 className="w-3 h-3" />
                     </button>
                   )}
+                  
+                  {/* Reaction Button */}
+                  <button
+                    onClick={() => setActiveReactionMsgId(activeReactionMsgId === msg.id ? null : msg.id)}
+                    className={`absolute bottom-1 ${isOwn ? '-left-8' : '-right-8'} opacity-0 group-hover:opacity-100 p-1 bg-white rounded-full shadow-sm text-gray-400 hover:text-rose-dusty transition-all`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                  </button>
+
+                  {/* Reaction Picker Overlay */}
+                  <AnimatePresence>
+                    {activeReactionMsgId === msg.id && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className={`absolute -top-10 ${isOwn ? 'right-0' : 'left-0'} bg-white rounded-full shadow-lg border border-blush/20 px-2 py-1.5 flex items-center gap-1 z-10`}
+                      >
+                        {REACTION_EMOJIS.map(emoji => (
+                          <button
+                            key={emoji}
+                            onClick={() => handleReact(msg.id, emoji)}
+                            className="hover:scale-125 transition-transform text-lg leading-none"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  {/* Display Reactions */}
+                  {msg.reactions && msg.reactions.length > 0 && (
+                    <div className={`absolute -bottom-3 ${isOwn ? 'right-2' : 'left-2'} flex items-center gap-0.5`}>
+                      {Object.entries(msg.reactions.reduce((acc, r) => {
+                        acc[r.emoji] = (acc[r.emoji] || 0) + 1
+                        return acc
+                      }, {} as Record<string, number>)).map(([emoji, count]) => (
+                        <div key={emoji} onClick={() => handleReact(msg.id, emoji)} className="bg-white border border-blush/20 rounded-full px-1.5 py-0.5 text-[10px] shadow-sm flex items-center gap-0.5 cursor-pointer hover:bg-blush/10">
+                          <span>{emoji}</span>
+                          {count > 1 && <span className="text-deepPlum/70 font-medium">{count}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                 </motion.div>
+                {isOwn && (
+                  <div className="w-6 h-6 rounded-full overflow-hidden bg-lavender-mist/50 shrink-0 ml-2 self-end mb-1 border border-white shadow-sm flex items-center justify-center">
+                    {senderAvatar ? <img src={senderAvatar} alt="Me" className="w-full h-full object-cover"/> : <span className="text-[10px] text-deepPlum/60 font-medium">{initial}</span>}
+                  </div>
+                )}
               </div>
             )
           })

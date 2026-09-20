@@ -26,8 +26,10 @@ export default function Garden() {
   const [orbitProgress, setOrbitProgress] = useState(0)
   
   const [items, setItems] = useState<GardenItem[]>([])
-  const { profile } = useCurrentProfile()
-  
+  const { profile, partner } = useCurrentProfile()
+  const [partnerWeather, setPartnerWeather] = useState<{ temp: number, code: number } | null>(null)
+  const isSun = profile?.username?.toLowerCase() === 'sundar'
+
   useEffect(() => {
     if (profile?.relationship_id) {
       gardenService.getItems(profile.relationship_id).then(data => {
@@ -37,13 +39,27 @@ export default function Garden() {
           title: d.title,
           date: new Date(d.created_at).toLocaleDateString(),
           source: d.source,
-          author: d.author_id === profile.id ? profile.username as 'sundar' | 'bee' : (profile.username === 'sundar' ? 'bee' : 'sundar'),
+          author: d.author_id === profile.id ? profile.username as 'sundar' | 'bee' : (partner?.username as 'sundar' | 'bee'),
+          authorName: d.author_id === profile.id ? profile.display_name : partner?.display_name || 'Partner',
           x: d.position_x,
           y: d.position_y
-        })))
+        } as GardenItem & { authorName: string })))
       }).catch(console.error)
     }
-  }, [profile])
+  }, [profile, partner])
+
+  useEffect(() => {
+    if (partner?.latitude && partner?.longitude) {
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${partner.latitude}&longitude=${partner.longitude}&current=temperature_2m,weather_code`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.current) {
+            setPartnerWeather({ temp: data.current.temperature_2m, code: data.current.weather_code })
+          }
+        })
+        .catch(console.error)
+    }
+  }, [partner])
 
   useEffect(() => {
     const updateTime = () => {
@@ -79,6 +95,8 @@ export default function Garden() {
     return () => clearInterval(interval)
   }, [])
 
+  const isRaining = partnerWeather && [61, 63, 65, 66, 67, 80, 81, 82].includes(partnerWeather.code)
+
   const theme = useMemo(() => {
     switch (timePhase) {
       case 'morning': return {
@@ -86,7 +104,7 @@ export default function Garden() {
         text: 'text-[#065F46]',
         subtext: 'text-[#065F46]/60',
         sky: 'from-[#E0F2FE] via-[#F0FDF4] to-[#F9FAFB]',
-        celestial: <CustomSun className="w-24 h-24" highlight={profile?.username?.toLowerCase() === 'sundar'} />,
+        celestial: <CustomSun className="w-24 h-24" label={isSun ? `${profile?.display_name || 'Sun'} (You)` : undefined} />,
         greeting: 'Good morning, growing garden.',
         glow: 'bg-[#FDE68A]/30',
         particles: 'bg-[#D1FAE5]'
@@ -96,7 +114,7 @@ export default function Garden() {
         text: 'text-amber-900',
         subtext: 'text-amber-900/60',
         sky: 'from-[#60A5FA] via-[#BAE6FD] to-[#FEF3C7]',
-        celestial: <CustomSun className="w-24 h-24" highlight={profile?.username?.toLowerCase() === 'sundar'} />,
+        celestial: <CustomSun className="w-24 h-24" label={isSun ? `${profile?.display_name || 'Sun'} (You)` : undefined} />,
         greeting: 'Bright afternoon in the garden.',
         glow: 'bg-yellow-300/40',
         particles: 'bg-yellow-200'
@@ -106,7 +124,7 @@ export default function Garden() {
         text: 'text-rose-900',
         subtext: 'text-rose-900/60',
         sky: 'from-[#FDBA74] via-[#FCA5A5] to-[#FFF0F0]',
-        celestial: <CustomSun className="w-24 h-24 opacity-80" highlight={profile?.username?.toLowerCase() === 'sundar'} />,
+        celestial: <CustomSun className="w-24 h-24 opacity-80" label={isSun ? `${profile?.display_name || 'Sun'} (You)` : undefined} />,
         greeting: 'Warm sunset in the garden.',
         glow: 'bg-orange-400/30',
         particles: 'bg-orange-200'
@@ -116,13 +134,13 @@ export default function Garden() {
         text: 'text-lavender-mist',
         subtext: 'text-lavender-pale/60',
         sky: 'from-[#0f172a] via-[#1e1b4b] to-[#1a1b2e]',
-        celestial: <CustomMoon className="w-20 h-20" highlight={profile?.username?.toLowerCase() === 'bee'} />,
+        celestial: <CustomMoon className="w-20 h-20" label={!isSun ? `${profile?.display_name || 'Moon'} (You)` : undefined} />,
         greeting: 'Good evening, moonlit garden.',
         glow: 'bg-indigo-500/20',
         particles: 'bg-indigo-300 shadow-[0_0_8px_rgba(165,180,252,0.8)]' // Fireflies
       }
     }
-  }, [timePhase, profile])
+  }, [timePhase, profile, isSun])
 
   // Celestial mechanics: moves in an arc from left (0%) to right (100%) and rises in the middle
   const orbitStyle = {
@@ -158,9 +176,15 @@ export default function Garden() {
         <div className={`absolute bottom-0 left-0 w-[400px] h-[400px] ${timePhase==='night'?'bg-indigo-900/40':'bg-sage/10'} rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3 transition-colors duration-1000`} />
 
         {/* Orbiting Celestial Body */}
-        <div className="absolute flex items-center justify-center" style={orbitStyle}>
+        <motion.div 
+          className="absolute flex items-center justify-center cursor-grab active:cursor-grabbing" 
+          style={orbitStyle}
+          drag
+          dragSnapToOrigin
+          whileDrag={{ scale: 1.1, zIndex: 50 }}
+        >
           {theme.celestial}
-        </div>
+        </motion.div>
       </div>
 
       {/* Scrolling Content Layer */}
@@ -173,11 +197,35 @@ export default function Garden() {
           <p className={`${theme.text} text-xs mt-2 font-medium opacity-80`}>{theme.greeting}</p>
         </div>
 
+        {/* Weather & Identity HUD */}
+        {partner && (
+          <div className="px-5 mb-6 flex justify-end">
+            <div className="bg-white/40 backdrop-blur-md rounded-2xl p-3 border border-white/40 flex items-center gap-3 shadow-sm">
+              <div className="text-right">
+                <p className="text-xs font-bold uppercase tracking-widest text-deepPlum/60">{partner.display_name}'s Sky</p>
+                {partnerWeather ? (
+                  <p className="text-sm text-deepPlum font-medium">{partnerWeather.temp}°C {isRaining ? '• Raining' : ''}</p>
+                ) : (
+                  <p className="text-xs text-deepPlum/60">Weather unavailable</p>
+                )}
+              </div>
+              <div className="w-10 h-10 rounded-full bg-deepPlum/10 flex items-center justify-center font-serif text-deepPlum text-lg">
+                {partner.display_name?.charAt(0).toUpperCase()}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Garden Ground Area */}
         <div className={`mx-5 h-[400px] relative border ${timePhase==='night'?'border-white/10 bg-black/20':'border-sage/20 bg-white/40'} rounded-[2rem] backdrop-blur-sm overflow-hidden shadow-sm transition-colors duration-1000 flex-shrink-0`}>
           {/* Animated Grass / Background Pattern */}
           <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTIwIDQwIEMyMCAyMCAxMCAxMCAxMCAwIiBzdHJva2U9IiNBOUJFQTUiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMjAgNDAgQzIwIDIwIDMwIDEwIDMwIDAiIHN0cm9rZT0iI0E5QkVBNSIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==')] animate-[pulse_4s_ease-in-out_infinite]" />
           
+          {/* Rain Layer */}
+          {isRaining && (
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjIwIj48cGF0aCBkPSJNMjAgMjBMMCAwIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4zKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+')] opacity-60 animate-[slide_1s_linear_infinite]" />
+          )}
+
           {/* Ambient Particles */}
           {Array.from({ length: 15 }).map((_, i) => (
             <motion.div
@@ -278,7 +326,7 @@ export default function Garden() {
               <p className="text-deepPlum/60 text-sm mb-1">{selectedItem.date}</p>
               
               <p className="text-deepPlum/40 text-xs font-bold uppercase tracking-wider mb-4">
-                Planted by {selectedItem.author === 'sundar' ? 'Sundar' : 'Bee'}
+                Planted by {(selectedItem as any).authorName}
               </p>
               
               <p className="text-deepPlum/80 text-sm leading-relaxed pb-2">

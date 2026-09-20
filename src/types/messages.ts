@@ -25,7 +25,18 @@ export interface ChatMessage {
   created_at: string
   delivered_at?: string
   read_at?: string
+  reactions?: ChatReaction[]
 }
+
+export interface ChatReaction {
+  id: string
+  message_id: string
+  user_id: string
+  emoji: string
+  created_at: string
+}
+
+export type ChatReactionInsert = Omit<ChatReaction, 'id' | 'created_at'>
 
 export type ChatMessageInsert = Omit<ChatMessage, 'id' | 'created_at' | 'delivered_at' | 'read_at'>
 

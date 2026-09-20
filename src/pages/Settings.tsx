@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { UserCircle, Heart, Shield, Download, LogOut, ChevronLeft, Edit2, Upload } from 'lucide-react'
+import { UserCircle, Heart, Shield, Download, LogOut, ChevronLeft, Edit2, Upload, X, Share } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useCurrentProfile } from '../hooks/useCurrentProfile'
 import { useToast } from '../contexts/ToastContext'
+import { AnimatePresence, motion } from 'framer-motion'
 
 export default function Settings() {
   const navigate = useNavigate()
@@ -14,8 +15,40 @@ export default function Settings() {
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState(profile?.display_name || '')
   const [isUploading, setIsUploading] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [showIosPrompt, setShowIosPrompt] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (profile?.display_name && !editName) setEditName(profile.display_name)
+  }, [profile?.display_name])
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  const handleInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null)
+      }
+    } else {
+      const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase())
+      if (isIos) {
+        setShowIosPrompt(true)
+      } else {
+        success('App is already installed or install not supported on this browser.')
+      }
+    }
+  }
 
   const handleLogout = async () => {
     setLoading(true)
@@ -192,9 +225,15 @@ export default function Settings() {
             <Download className="w-5 h-5 text-lavender-deep" />
             <h2 className="font-semibold text-base">Install App</h2>
           </div>
-          <p className="text-xs text-deepPlum/60 leading-relaxed mb-3">
-            For the best experience on iOS, tap the Share icon in Safari and select "Add to Home Screen".
+          <p className="text-xs text-deepPlum/60 leading-relaxed mb-4">
+            For the best experience, add Beegram to your home screen.
           </p>
+          <button 
+            onClick={handleInstall}
+            className="w-full py-3 bg-lavender-dark text-white rounded-xl font-medium shadow-sm hover:bg-lavender-deep transition-colors"
+          >
+            Install Beegram
+          </button>
         </section>
 
         {/* Account */}
@@ -220,6 +259,65 @@ export default function Settings() {
         </section>
 
       </div>
+
+      <AnimatePresence>
+        {showIosPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm flex items-end justify-center pb-8 px-4"
+            onClick={() => setShowIosPrompt(false)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-sm bg-white rounded-[2rem] p-6 shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowIosPrompt(false)}
+                className="absolute top-4 right-4 w-8 h-8 bg-gray-100 text-gray-500 rounded-full flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              
+              <div className="w-16 h-16 bg-lavender-soft/50 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+                <img src="/ghochou.jpeg" alt="Icon" className="w-12 h-12 rounded-xl object-cover" />
+              </div>
+              
+              <h3 className="text-xl font-serif text-center text-deepPlum font-semibold mb-2">Install Beegram</h3>
+              <p className="text-center text-sm text-deepPlum/70 mb-6">
+                Install this app on your iPhone to access it directly from your home screen.
+              </p>
+              
+              <div className="bg-gray-50 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 bg-white shadow-sm rounded-full flex items-center justify-center text-blue-500 shrink-0">
+                    <Share className="w-4 h-4" />
+                  </div>
+                  <p className="text-sm text-gray-700 font-medium">1. Tap the Share icon below</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 bg-white shadow-sm rounded-full flex items-center justify-center text-gray-700 shrink-0">
+                    <span className="font-bold pb-1 text-lg">+</span>
+                  </div>
+                  <p className="text-sm text-gray-700 font-medium">2. Choose "Add to Home Screen"</p>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => setShowIosPrompt(false)}
+                className="w-full mt-6 py-3.5 bg-lavender-dark text-white rounded-xl font-medium"
+              >
+                Got it
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -10,6 +10,8 @@ import type {
   Buzz,
   BuzzInsert,
   AppNotificationInsert,
+  ChatReaction,
+  ChatReactionInsert
 } from '../types/messages'
 import { notificationService } from './notificationService'
 
@@ -71,11 +73,18 @@ export const messageService = {
     requireUuid(relationshipId, 'relationship ID')
     const { data, error } = await (supabase as any)
       .from('messages')
-      .select('*')
+      .select('*, chat_reactions(*)')
       .eq('relationship_id', relationshipId)
       .order('created_at', { ascending: true })
     if (error) throw error
-    return Promise.all((data as ChatMessage[]).map(hydrateChatMessage))
+    
+    // Map chat_reactions to reactions
+    const mapped = (data as any[]).map(msg => ({
+      ...msg,
+      reactions: msg.chat_reactions || []
+    }))
+    
+    return Promise.all((mapped as ChatMessage[]).map(hydrateChatMessage))
   },
 
   async sendChatMessage(insert: ChatMessageInsert): Promise<ChatMessage> {
@@ -193,4 +202,54 @@ export const messageService = {
     const { error } = await (supabase as any).from('notifications').insert(insert)
     if (error) throw error
   },
+
+  async getUnreadCount(relationshipId: string, userId: string): Promise<number> {
+    requireUuid(relationshipId, 'relationship ID')
+    requireUuid(userId, 'user ID')
+    
+    // Check unread chat messages
+    const { count: messageCount } = await (supabase as any)
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('relationship_id', relationshipId)
+      .eq('recipient_id', userId)
+      .is('read_at', null)
+
+    // Check unread letters
+    const { count: letterCount } = await (supabase as any)
+      .from('letters')
+      .select('id', { count: 'exact', head: true })
+      .eq('relationship_id', relationshipId)
+      .neq('author_id', userId)
+      .is('read_at', null)
+      .eq('is_draft', false)
+
+    return (messageCount || 0) + (letterCount || 0)
+  },
+
+  async toggleReaction(messageId: string, userId: string, emoji: string): Promise<void> {
+    requireUuid(messageId, 'message ID')
+    requireUuid(userId, 'user ID')
+
+    // Check if reaction exists
+    const { data: existing } = await (supabase as any)
+      .from('chat_reactions')
+      .select('id')
+      .eq('message_id', messageId)
+      .eq('user_id', userId)
+      .eq('emoji', emoji)
+      .maybeSingle()
+
+    if (existing) {
+      // Remove
+      await (supabase as any).from('chat_reactions').delete().eq('id', existing.id)
+    } else {
+      // Add
+      await (supabase as any).from('chat_reactions').insert({
+        message_id: messageId,
+        user_id: userId,
+        emoji
+      })
+    }
+  }
 }

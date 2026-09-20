@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-export const CustomSun = ({ className, highlight }: { className?: string, highlight?: boolean }) => {
+export const CustomSun = ({ className, label }: { className?: string, label?: string }) => {
   return (
     <div className={`relative flex flex-col items-center justify-center ${className}`}>
       {/* Glow effects */}
@@ -14,16 +14,16 @@ export const CustomSun = ({ className, highlight }: { className?: string, highli
         className="relative z-10 w-full h-full rounded-full object-cover shadow-[0_0_20px_rgba(243,201,105,0.8)] border border-orange-200/50"
       />
       
-      {highlight && (
+      {label && (
         <div className="absolute -bottom-8 z-20 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 text-xs font-bold text-orange-900 shadow-sm whitespace-nowrap">
-          Sundar (You)
+          {label}
         </div>
       )}
     </div>
   )
 }
 
-export const CustomMoon = ({ className, highlight }: { className?: string, highlight?: boolean }) => {
+export const CustomMoon = ({ className, label }: { className?: string, label?: string }) => {
   // Simple moon phase calculation based on current date
   const phase = useMemo(() => {
     const today = new Date()
@@ -60,9 +60,9 @@ export const CustomMoon = ({ className, highlight }: { className?: string, highl
         className="relative z-10 w-full h-full rounded-full object-cover shadow-[0_0_15px_rgba(199,210,254,0.6)] border border-indigo-200/30 mix-blend-screen"
       />
 
-      {highlight && (
+      {label && (
         <div className="absolute -bottom-8 z-20 px-3 py-1 rounded-full bg-indigo-900/40 backdrop-blur-md border border-indigo-200/20 text-xs font-bold text-indigo-100 shadow-sm whitespace-nowrap">
-          Bee (You)
+          {label}
         </div>
       )}
     </div>

@@ -199,14 +199,22 @@ useEffect(() => {
                 transition={{ type: "spring", stiffness: 50, damping: 20 }}
               >
                 <div className="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[24px] border-b-lavender-deep -mt-2 drop-shadow-md" />
-                <div className="w-6 h-6 bg-white rounded-full absolute top-[16px] shadow-sm border border-lavender-deep/20 flex items-center justify-center">
-                   <PartnerIcon className="w-3 h-3 text-lavender-deep" />
+                <div className="w-6 h-6 bg-white rounded-full absolute top-[16px] shadow-sm border border-lavender-deep/20 flex items-center justify-center overflow-hidden">
+                   {partner?.avatar_url ? (
+                     <img src={partner.avatar_url} className="w-full h-full object-cover" />
+                   ) : (
+                     <PartnerIcon className="w-3 h-3 text-lavender-deep" />
+                   )}
                 </div>
               </motion.div>
 
               {/* Center Node */}
-              <div className="w-8 h-8 bg-white rounded-full shadow-md border-2 border-lavender-soft flex items-center justify-center z-10">
-                <UserIcon className="w-4 h-4 text-deepPlum" />
+              <div className="w-8 h-8 bg-white rounded-full shadow-md border-2 border-lavender-soft flex items-center justify-center z-10 overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} className="w-full h-full object-cover" />
+                ) : (
+                  <UserIcon className="w-4 h-4 text-deepPlum" />
+                )}
               </div>
             </div>
 

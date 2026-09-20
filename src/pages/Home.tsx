@@ -23,17 +23,24 @@ export default function Home() {
   
   useEffect(() => {
     if (!profile?.relationship_id) return
-    Promise.all([
-      thingsToDoService.getActivities(),
-      momentService.getMoments(),
-      musicService.getSongs(profile.relationship_id),
-      gardenService.getItems(profile.relationship_id),
-    ]).then(([activities, moments, songs, gardenItems]) => {
-      setTodoCount(activities.filter(activity => !activity.isCompleted).length)
-      setLatestMoment(moments[0] || null)
-      setLatestSong(songs[0] || null)
-      setGardenCount(gardenItems.length)
-    }).catch(error => console.error('Failed to load home data:', error))
+    
+    // Fetch independently so one failure doesn't break the whole home screen
+    thingsToDoService.getActivities()
+      .then(activities => setTodoCount(activities.filter(a => !a.isCompleted).length))
+      .catch(error => console.error('Failed to load activities:', error))
+
+    momentService.getMoments()
+      .then(moments => setLatestMoment(moments[0] || null))
+      .catch(error => console.error('Failed to load moments:', error))
+
+    musicService.getSongs(profile.relationship_id)
+      .then(songs => setLatestSong(songs[0] || null))
+      .catch(error => console.error('Failed to load songs:', error))
+
+    gardenService.getItems(profile.relationship_id)
+      .then(gardenItems => setGardenCount(gardenItems.length))
+      .catch(error => console.error('Failed to load garden items:', error))
+      
   }, [profile?.relationship_id])
 
   // Seeded start date: 20 June 2026, 12:00 AM
@@ -42,8 +49,24 @@ export default function Home() {
   return (
     <div className="min-h-[100dvh] bg-lavender-mist pt-safe">
       
+      {/* Top Bar with Profile */}
+      <div className="w-full px-5 pt-4 pb-2 flex justify-between items-center relative z-30">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/settings')}>
+          <div className="w-8 h-8 rounded-full bg-white border border-lavender-mist overflow-hidden flex items-center justify-center text-sm font-serif text-deepPlum shadow-sm">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              profile?.display_name?.charAt(0).toUpperCase() || '?'
+            )}
+          </div>
+          <span className="font-serif text-plumBrown text-sm font-medium">
+            {profile?.display_name || 'Set Name'}
+          </span>
+        </div>
+      </div>
+
       {/* Hero Section */}
-      <div className="w-full relative flex flex-col items-center pt-8 bg-gradient-to-b from-lavender-soft/20 to-lavender-mist">
+      <div className="w-full relative flex flex-col items-center pt-2 bg-gradient-to-b from-lavender-soft/20 to-lavender-mist">
         
         {/* Welcome Text */}
         <motion.div 
@@ -109,7 +132,7 @@ export default function Home() {
               <span className="text-[8px] font-sans text-mauveGray uppercase tracking-[0.15em] mt-1">Sec</span>
             </div>
           </div>
-          <p className="text-[11px] font-serif italic text-mauveGray mt-4 opacity-80">Since 20 June 2026 · 12:00 AM</p>
+          <p className="text-[11px] font-serif italic text-mauveGray mt-4 opacity-80">Our story began &middot; 20 June 2026</p>
         </motion.div>
 
         {/* Compact Shortcuts */}

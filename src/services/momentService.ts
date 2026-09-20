@@ -226,4 +226,67 @@ export const momentService = {
       createdAt: data.created_at,
     }
   },
+
+  async deleteMoment(momentId: string): Promise<void> {
+    requireUuid(momentId, 'moment ID')
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Not authenticated')
+
+    // Get the moment to find the media path and ensure ownership
+    const { data: moment, error: fetchError } = await (supabase as any)
+      .from('moments')
+      .select('user_id, media_url')
+      .eq('id', momentId)
+      .single()
+      
+    if (fetchError) throw fetchError
+    if (moment.user_id !== user.id) throw new Error('You can only delete your own moments')
+
+    // Delete the media file
+    if (moment.media_url) {
+      await supabase.storage.from('moments').remove([moment.media_url])
+    }
+
+    // Delete the moment (cascades to comments/reactions via DB constraints)
+    const { error: deleteError } = await (supabase as any)
+      .from('moments')
+      .delete()
+      .eq('id', momentId)
+
+    if (deleteError) throw deleteError
+  },
+
+  async editMoment(momentId: string, updates: { caption?: string, location?: string, date?: string }): Promise<void> {
+    requireUuid(momentId, 'moment ID')
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Not authenticated')
+
+    const { data: moment, error: fetchError } = await (supabase as any)
+      .from('moments')
+      .select('user_id')
+      .eq('id', momentId)
+      .single()
+      
+    if (fetchError) throw fetchError
+    if (moment.user_id !== user.id) throw new Error('You can only edit your own moments')
+
+    const updateData: any = {}
+    if (updates.caption !== undefined) {
+      updateData.description = updates.caption.trim() || null
+      updateData.title = updates.caption.trim().substring(0, 50) || null
+    }
+    if (updates.location !== undefined) {
+      updateData.location = updates.location || null
+    }
+    if (updates.date !== undefined) {
+      updateData.occurred_on = updates.date || null
+    }
+
+    const { error: updateError } = await (supabase as any)
+      .from('moments')
+      .update(updateData)
+      .eq('id', momentId)
+
+    if (updateError) throw updateError
+  },
 }

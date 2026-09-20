@@ -35,33 +35,57 @@ export default function Doodle() {
   const [, setUndoneStrokes] = useState<Stroke[]>([])
   const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null)
 
+  const [loadedImageUrl, setLoadedImageUrl] = useState<string | null>(null)
+
   useEffect(() => {
     // Load previously saved doodle
     const loadDoodle = async () => {
       if (!profile?.relationship_id) return
       
-      const { data, error: fetchErr } = await supabase
-        .from('saved_doodles')
-        .select('*')
-        .eq('relationship_id', profile.relationship_id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
+      try {
+        const { data, error: fetchErr } = await supabase
+          .from('saved_doodles')
+          .select('*')
+          .eq('relationship_id', profile.relationship_id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+          
+        if (fetchErr || !data) return
         
-      if (fetchErr || !data) return
+        const { data: signedData, error: signErr } = await supabase.storage.from('doodles').createSignedUrl(data.image_url, 60 * 60)
+        if (signErr || !signedData?.signedUrl) return
+        
+        const imgUrl = signedData.signedUrl
+        
+        // Load the image onto the canvas
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => {
+          const canvas = canvasRef.current
+          if (!canvas) return
+          const ctx = canvas.getContext('2d')
+          if (!ctx) return
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        }
+        img.onerror = () => {
+          console.error("Failed to load doodle image onto canvas due to CORS or network error.")
+          // Fallback: just display without crossOrigin if CORS blocks it, though saving later might fail
+          const fallbackImg = new Image()
+          fallbackImg.onload = () => {
+            const canvas = canvasRef.current
+            if (canvas) {
+              const ctx = canvas.getContext('2d')
+              ctx?.drawImage(fallbackImg, 0, 0, canvas.width, canvas.height)
+            }
+          }
+          fallbackImg.src = imgUrl
+        }
+        img.src = imgUrl
 
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.onload = () => {
-        const canvas = canvasRef.current
-        if (!canvas) return
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      } catch (err) {
+        console.error("Error loading doodle:", err)
       }
-      const { data: publicUrlData } = supabase.storage.from('doodles').getPublicUrl(data.image_url)
-      img.src = publicUrlData.publicUrl
     }
     loadDoodle()
   }, [profile?.relationship_id])
@@ -227,20 +251,22 @@ export default function Doodle() {
       {/* Header */}
       <div className="px-5 pt-6 pb-2 sticky top-0 bg-warmPaper/90 backdrop-blur-md z-20 flex items-center justify-between">
         <BackButton />
-        <h1 className="text-xl font-serif text-deepPlum font-medium">Doodle Wall</h1>
+        <h1 className="text-xl font-serif text-deepPlum font-medium hidden sm:block">Doodle Wall</h1>
         <div className="flex gap-2">
           <button 
             onClick={downloadSnapshot}
-            className="w-10 h-10 rounded-full bg-lavender-soft/20 text-lavender-deep hover:bg-lavender-soft/40 flex items-center justify-center transition-colors"
+            className="px-3 py-2 rounded-full bg-lavender-soft/20 text-lavender-deep hover:bg-lavender-soft/40 flex items-center justify-center transition-colors gap-2"
           >
-            <Download className="w-5 h-5" />
+            <Download className="w-4 h-4" />
+            <span className="text-xs font-medium uppercase tracking-wider">Save</span>
           </button>
           <button 
             onClick={saveToSupabase}
             disabled={isSaving}
-            className="w-10 h-10 rounded-full bg-lavender-deep text-white hover:bg-lavender-deep/90 flex items-center justify-center transition-colors shadow-sm disabled:opacity-50"
+            className="px-4 py-2 rounded-full bg-lavender-deep text-white hover:bg-lavender-deep/90 flex items-center justify-center transition-colors shadow-sm disabled:opacity-50 gap-2"
           >
-            <Save className="w-5 h-5" />
+            <Save className="w-4 h-4" />
+            <span className="text-xs font-medium uppercase tracking-wider">{isSaving ? 'Posting...' : 'Post to Wall'}</span>
           </button>
         </div>
       </div>

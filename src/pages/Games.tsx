@@ -101,91 +101,201 @@ export default function Games() {
 
       <div className="px-5 mt-6 space-y-4 relative z-10 flex flex-col pb-safe">
         
-        {/* Fish Catch */}
-        <button onClick={() => handleShowRules('fish')} className="w-full relative overflow-hidden bg-gradient-to-br from-[#0099F7] to-[#F11712] p-5 rounded-3xl shadow-md border-0 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[140px] justify-end">
-          <div className="absolute inset-0 bg-blue-900/40 mix-blend-overlay" />
-          <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
-            <span className="text-white font-bold text-xs">Best: {profile?.id ? leaderboard[profile.id]?.games['fish'] || 0 : 0}</span>
+        {/* Fish Catch: Ocean */}
+        <button onClick={() => handleShowRules('fish')} className="w-full relative overflow-hidden bg-gradient-to-b from-blue-400 to-blue-600 p-5 rounded-3xl shadow-lg border border-blue-300/50 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[160px] group">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTIwIDQwIEMyMCAyMCAxMCAxMCAxMCAwIiBzdHJva2U9IiNGRkYiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuMSIvPjwvc3ZnPg==')] animate-[pulse_4s_ease-in-out_infinite]" />
+          
+          <div className="flex justify-between items-start relative z-10">
+            <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-yellow-300 animate-pulse" />
+              <span className="text-white font-bold text-xs">Best: {profile?.id ? leaderboard[profile.id]?.games['fish'] || 0 : 0}</span>
+            </div>
+            <div className="bg-black/20 backdrop-blur-md px-3 py-1 rounded-full">
+              <span className="text-white/90 font-bold text-[10px] uppercase tracking-wider">Medium</span>
+            </div>
           </div>
-          <div className="relative z-10 text-white">
-            <h3 className="font-serif text-2xl font-bold mb-1">Fish Catch</h3>
-            <p className="text-sm text-white/90 font-medium">Eat small. Avoid big.</p>
-            <p className="text-xs text-white/60 mt-2 uppercase tracking-widest font-bold">Difficulty: Medium</p>
+          
+          <div className="flex-1" />
+          
+          <div className="relative z-10 flex justify-between items-end">
+            <div>
+              <h3 className="font-serif text-3xl font-bold text-white mb-1 drop-shadow-md">Fish Catch</h3>
+              <p className="text-sm text-blue-50 font-medium opacity-90">Eat small. Avoid big.</p>
+            </div>
+            <div className="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center shadow-lg group-hover:bg-blue-50 transition-colors">
+              <span className="font-bold text-sm">▶</span>
+            </div>
           </div>
         </button>
 
-        {/* ReflexZero */}
-        <button onClick={() => handleShowRules('reflex')} className="w-full relative overflow-hidden bg-gradient-to-br from-[#0f172a] to-[#334155] p-5 rounded-3xl shadow-md border-0 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[140px] justify-end">
-          <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-            <span className="text-white font-bold text-xs">Best: {profile?.id ? leaderboard[profile.id]?.games['reflex'] || 0 : 0}</span>
+        {/* ReflexZero: Cyber */}
+        <button onClick={() => handleShowRules('reflex')} className="w-full relative overflow-hidden bg-gradient-to-br from-indigo-950 via-purple-900 to-black p-5 rounded-3xl shadow-lg border border-purple-500/30 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[160px] group">
+          <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />
+          
+          <div className="flex justify-between items-start relative z-10">
+            <div className="bg-purple-900/40 backdrop-blur-md px-3 py-1 rounded-full border border-purple-500/30 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />
+              <span className="text-fuchsia-100 font-bold text-xs">Best: {profile?.id ? leaderboard[profile.id]?.games['reflex'] || 0 : 0}</span>
+            </div>
+            <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-red-500/30">
+              <span className="text-red-400 font-bold text-[10px] uppercase tracking-wider">Hard</span>
+            </div>
           </div>
-          <div className="relative z-10 text-white">
-            <h3 className="font-serif text-2xl font-bold mb-1 text-rose-500">ReflexZero</h3>
-            <p className="text-sm text-slate-300 font-medium">Don't blink.</p>
-            <p className="text-xs text-slate-400 mt-2 uppercase tracking-widest font-bold">Difficulty: Hard</p>
+          
+          <div className="flex-1" />
+          
+          <div className="relative z-10 flex justify-between items-end">
+            <div>
+              <h3 className="font-sans text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-400 mb-1 tracking-tight">REFLEX_ZERO</h3>
+              <p className="text-sm text-indigo-200 font-medium opacity-90">Don't blink.</p>
+            </div>
+            <div className="w-10 h-10 bg-fuchsia-500 text-white rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(217,70,239,0.5)] group-hover:bg-fuchsia-400 transition-colors">
+              <span className="font-bold text-sm">▶</span>
+            </div>
           </div>
         </button>
 
         <div className="grid grid-cols-2 gap-4">
-          {/* Tic Tac Toe */}
-          <button onClick={() => handleShowRules('tictactoe')} className="w-full relative overflow-hidden bg-gradient-to-br from-[#E6E6FA] to-[#D8BFD8] p-5 rounded-3xl shadow-sm border border-purple-200 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[160px]">
-            <div className="absolute top-3 right-3 text-[10px] font-bold text-purple-900/40 uppercase bg-white/50 px-2 py-1 rounded-full">Easy</div>
+          {/* Tic Tac Toe: Wood */}
+          <button onClick={() => handleShowRules('tictactoe')} className="w-full relative overflow-hidden bg-[#8B5A2B] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjOEI1QTJCIi8+CjxwYXRoIGQ9Ik0wIDBMOCA4Wk04IDBMMCA4WiIgc3Ryb2tlPSIjN0E0QTIzIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9zdmc+')] p-4 rounded-3xl shadow-lg border-2 border-[#5C3A18] flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[180px] group">
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/40" />
+            
+            <div className="relative z-10 flex justify-between items-start mb-2">
+              <div className="bg-black/30 backdrop-blur-sm px-2 py-1 rounded-md border border-black/20">
+                <span className="text-amber-100 font-bold text-[10px] uppercase">Easy</span>
+              </div>
+            </div>
+            
+            <div className="relative z-10 bg-[#E8DCC4] rounded-xl p-2 mb-2 shadow-inner border-2 border-[#5C3A18] flex items-center justify-center">
+              <span className="text-2xl font-black text-[#5C3A18]">X O</span>
+            </div>
+            
             <div className="flex-1" />
-            <h3 className="font-serif text-lg font-bold text-purple-900 leading-tight mb-1">Tic Tac<br/>Toe</h3>
-            <p className="text-xs text-purple-900/60 font-medium">Wins: {profile?.id ? leaderboard[profile.id]?.games['tictactoe'] || 0 : 0}</p>
+            
+            <div className="relative z-10">
+              <h3 className="font-serif text-xl font-bold text-[#FFD700] drop-shadow-md mb-0.5 leading-tight">Tic Tac<br/>Toe</h3>
+              <p className="text-xs text-amber-100/90 font-medium mb-2">Wins: {profile?.id ? leaderboard[profile.id]?.games['tictactoe'] || 0 : 0}</p>
+              <div className="w-full bg-[#5C3A18] text-amber-100 rounded-xl py-1.5 text-center font-bold text-xs uppercase tracking-wider group-hover:bg-[#4A2E13] transition-colors border border-black/30 shadow-sm">Play</div>
+            </div>
           </button>
 
-          {/* Pop Balloons */}
-          <button onClick={() => handleShowRules('balloons')} className="w-full relative overflow-hidden bg-gradient-to-br from-[#FFE4E1] to-[#FFB6C1] p-5 rounded-3xl shadow-sm border border-rose-200 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[160px]">
-            <div className="absolute top-3 right-3 text-[10px] font-bold text-rose-900/40 uppercase bg-white/50 px-2 py-1 rounded-full">Medium</div>
+          {/* Pop Balloons: Carnival */}
+          <button onClick={() => handleShowRules('balloons')} className="w-full relative overflow-hidden bg-gradient-to-br from-pink-400 via-rose-400 to-red-400 p-4 rounded-3xl shadow-lg border border-pink-300 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[180px] group">
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_transparent_0,_transparent_4px,_white_4px,_white_100%)] bg-[length:16px_16px]" />
+            
+            <div className="relative z-10 flex justify-between items-start mb-2">
+              <div className="bg-white/30 backdrop-blur-sm px-2 py-1 rounded-full border border-white/40">
+                <span className="text-white font-bold text-[10px] uppercase">Medium</span>
+              </div>
+            </div>
+            
+            <div className="relative z-10 flex justify-center mb-2">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md animate-bounce" style={{animationDuration: '2s'}}>
+                <span className="text-2xl">🎈</span>
+              </div>
+            </div>
+            
             <div className="flex-1" />
-            <h3 className="font-serif text-lg font-bold text-rose-900 leading-tight mb-1">Pop<br/>Balloons</h3>
-            <p className="text-xs text-rose-900/60 font-medium">Best: {profile?.id ? leaderboard[profile.id]?.games['balloons'] || 0 : 0}</p>
+            
+            <div className="relative z-10">
+              <h3 className="font-serif text-xl font-black text-white drop-shadow-md mb-0.5 leading-tight">Pop<br/>Balloons</h3>
+              <p className="text-xs text-pink-50 font-medium mb-2 drop-shadow-sm">Best: {profile?.id ? leaderboard[profile.id]?.games['balloons'] || 0 : 0}</p>
+              <div className="w-full bg-white text-rose-500 rounded-xl py-1.5 text-center font-bold text-xs uppercase tracking-wider group-hover:bg-pink-50 transition-colors shadow-sm">Play</div>
+            </div>
           </button>
 
-          {/* Sweet Match */}
-          <button onClick={() => handleShowRules('candy')} className="w-full relative overflow-hidden bg-gradient-to-br from-[#FFC0CB] to-[#FF69B4] p-5 rounded-3xl shadow-sm border border-pink-300 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[160px]">
-            <div className="absolute top-3 right-3 text-[10px] font-bold text-white/80 uppercase bg-white/20 px-2 py-1 rounded-full">Medium</div>
+          {/* Sweet Match: Candy */}
+          <button onClick={() => handleShowRules('candy')} className="w-full relative overflow-hidden bg-gradient-to-br from-fuchsia-300 via-pink-300 to-rose-300 p-4 rounded-3xl shadow-lg border border-white/50 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[180px] group">
+            <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]" />
+            
+            <div className="relative z-10 flex justify-between items-start mb-2">
+              <div className="bg-pink-500/20 backdrop-blur-sm px-2 py-1 rounded-full border border-pink-400/30">
+                <span className="text-pink-900 font-bold text-[10px] uppercase">Medium</span>
+              </div>
+            </div>
+            
+            <div className="relative z-10 flex justify-center mb-2">
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white rotate-12">
+                <span className="text-2xl drop-shadow-sm">🍬</span>
+              </div>
+            </div>
+            
             <div className="flex-1" />
-            <h3 className="font-serif text-lg font-bold text-white leading-tight mb-1">Sweet<br/>Match</h3>
-            <p className="text-xs text-white/80 font-medium">Best: {profile?.id ? leaderboard[profile.id]?.games['candy'] || 0 : 0}</p>
+            
+            <div className="relative z-10">
+              <h3 className="font-sans text-xl font-black text-pink-900 mb-0.5 leading-tight">Sweet<br/>Match</h3>
+              <p className="text-xs text-pink-800 font-bold mb-2">Best: {profile?.id ? leaderboard[profile.id]?.games['candy'] || 0 : 0}</p>
+              <div className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl py-1.5 text-center font-bold text-xs uppercase tracking-wider group-hover:from-pink-600 group-hover:to-rose-600 transition-colors shadow-md border border-pink-400">Play</div>
+            </div>
           </button>
 
-          {/* Tower Block */}
-          <button onClick={() => handleShowRules('tower')} className="w-full relative overflow-hidden bg-gradient-to-br from-[#FF7E5F] to-[#FEB47B] p-5 rounded-3xl shadow-sm border border-orange-300 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[160px]">
-            <div className="absolute top-3 right-3 text-[10px] font-bold text-orange-900/40 uppercase bg-white/40 px-2 py-1 rounded-full">Hard</div>
+          {/* Tower Block: Sunset */}
+          <button onClick={() => handleShowRules('tower')} className="w-full relative overflow-hidden bg-gradient-to-t from-orange-600 via-amber-500 to-yellow-400 p-4 rounded-3xl shadow-lg border border-orange-400 flex flex-col text-left hover:scale-[1.02] transition-transform min-h-[180px] group">
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/40 to-transparent" />
+            
+            <div className="relative z-10 flex justify-between items-start mb-2">
+              <div className="bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full border border-white/20">
+                <span className="text-white font-bold text-[10px] uppercase">Hard</span>
+              </div>
+            </div>
+            
+            <div className="relative z-10 flex flex-col items-center justify-center mb-2 gap-0.5">
+              <div className="w-6 h-3 bg-white/90 rounded-sm shadow-sm" />
+              <div className="w-6 h-3 bg-white/80 rounded-sm shadow-sm translate-x-1" />
+              <div className="w-6 h-3 bg-white/70 rounded-sm shadow-sm -translate-x-1" />
+            </div>
+            
             <div className="flex-1" />
-            <h3 className="font-serif text-lg font-bold text-orange-900 leading-tight mb-1">Tower<br/>Block</h3>
-            <p className="text-xs text-orange-900/70 font-medium">Best: {profile?.id ? leaderboard[profile.id]?.games['tower'] || 0 : 0}</p>
+            
+            <div className="relative z-10">
+              <h3 className="font-sans text-xl font-black text-white drop-shadow-md mb-0.5 leading-tight">Tower<br/>Block</h3>
+              <p className="text-xs text-orange-50 font-medium mb-2 drop-shadow-sm">Best: {profile?.id ? leaderboard[profile.id]?.games['tower'] || 0 : 0}</p>
+              <div className="w-full bg-white text-orange-600 rounded-xl py-1.5 text-center font-bold text-xs uppercase tracking-wider group-hover:bg-orange-50 transition-colors shadow-sm">Play</div>
+            </div>
           </button>
         </div>
 
-        {/* RPS & Chess Full Width */}
-        <button onClick={() => handleShowRules('rps')} className="w-full bg-[#E8F5E9] p-5 rounded-3xl shadow-sm border border-green-200 flex items-center gap-4 text-left hover:scale-[1.02] transition-transform mt-4">
-          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center border border-green-100">
-            <span className="font-serif text-xl font-bold text-green-700">✌️</span>
+        {/* RPS: Green */}
+        <button onClick={() => handleShowRules('rps')} className="w-full relative overflow-hidden bg-gradient-to-r from-emerald-400 to-teal-500 p-5 rounded-3xl shadow-lg border border-emerald-300 flex items-center gap-4 text-left hover:scale-[1.02] transition-transform group">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuMSIvPjwvc3ZnPg==')]" />
+          
+          <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-inner relative z-10">
+            <span className="font-serif text-3xl font-bold text-white drop-shadow-sm">✌️</span>
           </div>
-          <div className="flex-1">
-            <h3 className="font-serif text-lg font-bold text-green-900">Rock Paper Scissors</h3>
-            <p className="text-xs font-medium text-green-800/60">Difficulty: Easy</p>
+          
+          <div className="flex-1 relative z-10">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-sans text-xl font-black text-white drop-shadow-sm">Rock Paper Scissors</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="bg-emerald-800/30 text-emerald-50 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Easy</span>
+              <span className="text-sm font-bold text-emerald-50">Streak: {profile?.id ? leaderboard[profile.id]?.games['rps'] || 0 : 0}</span>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="block text-xs font-bold text-green-900/40 uppercase">Streak</span>
-            <span className="block text-xl font-serif font-bold text-green-800">{profile?.id ? leaderboard[profile.id]?.games['rps'] || 0 : 0}</span>
+          
+          <div className="w-10 h-10 bg-white text-emerald-600 rounded-full flex items-center justify-center shadow-lg group-hover:bg-emerald-50 transition-colors relative z-10 shrink-0">
+            <span className="font-bold text-sm">▶</span>
           </div>
         </button>
 
-        <button onClick={() => handleShowRules('chess')} className="w-full bg-[#F5DEB3] p-5 rounded-3xl shadow-sm border border-amber-300/50 flex items-center gap-4 text-left hover:scale-[1.02] transition-transform">
-          <div className="w-12 h-12 bg-white/60 rounded-2xl flex items-center justify-center border border-white/40">
-            <span className="font-serif text-xl font-bold text-amber-900">♟️</span>
+        {/* Chess: Wood */}
+        <button onClick={() => handleShowRules('chess')} className="w-full relative overflow-hidden bg-gradient-to-r from-amber-700 to-amber-900 p-5 rounded-3xl shadow-lg border border-amber-600 flex items-center gap-4 text-left hover:scale-[1.02] transition-transform group">
+          <div className="absolute inset-0 opacity-30 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0wIDIwaDQwTTIwIDB2NDAiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+')] mix-blend-overlay" />
+          
+          <div className="w-14 h-14 bg-[#F5DEB3] rounded-2xl flex items-center justify-center border-2 border-[#D2B48C] shadow-inner relative z-10">
+            <span className="font-serif text-3xl font-bold drop-shadow-sm text-amber-900">♞</span>
           </div>
-          <div className="flex-1">
-            <h3 className="font-serif text-lg font-bold text-amber-900">Chess</h3>
-            <p className="text-xs font-medium text-amber-900/60">Difficulty: Hard</p>
+          
+          <div className="flex-1 relative z-10">
+            <h3 className="font-serif text-2xl font-bold text-[#F5DEB3] drop-shadow-sm mb-1">Chess</h3>
+            <div className="flex items-center gap-2">
+              <span className="bg-black/40 text-amber-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Hard</span>
+              <span className="text-sm font-bold text-amber-100">Wins: {profile?.id ? leaderboard[profile.id]?.games['chess'] || 0 : 0}</span>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="block text-xs font-bold text-amber-900/40 uppercase">Wins</span>
-            <span className="block text-xl font-serif font-bold text-amber-900">{profile?.id ? leaderboard[profile.id]?.games['chess'] || 0 : 0}</span>
+          
+          <div className="w-10 h-10 bg-[#F5DEB3] text-amber-900 rounded-full flex items-center justify-center shadow-lg group-hover:bg-white transition-colors relative z-10 shrink-0">
+            <span className="font-bold text-sm">▶</span>
           </div>
         </button>
 

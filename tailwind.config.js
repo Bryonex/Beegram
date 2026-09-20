@@ -41,11 +41,16 @@ export default {
       },
       animation: {
         'gentle-bounce': 'gentle-bounce 3s ease-in-out infinite',
+        'slide': 'slide 1s linear infinite',
       },
       keyframes: {
         'gentle-bounce': {
           '0%, 100%': { transform: 'translateY(-2%)' },
           '50%': { transform: 'translateY(2%)' },
+        },
+        'slide': {
+          '0%': { transform: 'translateY(-20px)' },
+          '100%': { transform: 'translateY(0)' },
         }
       }
     },

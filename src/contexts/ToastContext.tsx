@@ -47,7 +47,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast: addToast, success, error }}>
       {children}
-      <div className="fixed top-safe pt-4 left-0 right-0 z-50 flex flex-col items-center pointer-events-none px-4 gap-2">
+      <div className="fixed z-[150] flex flex-col pointer-events-none px-4 gap-2
+        top-[calc(env(safe-area-inset-top)+1rem)] left-0 right-0 items-center
+        md:top-6 md:right-6 md:left-auto md:items-end
+      ">
         <AnimatePresence>
           {toasts.map((t) => (
             <motion.div
@@ -55,18 +58,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               initial={{ opacity: 0, y: -20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.9 }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg backdrop-blur-xl border pointer-events-auto max-w-sm w-full
-                ${t.type === 'success' ? 'bg-green-50/90 border-green-200 text-green-800' : ''}
-                ${t.type === 'error' ? 'bg-red-50/90 border-red-200 text-red-800' : ''}
-                ${t.type === 'info' ? 'bg-white/90 border-amber-200 text-slate-800' : ''}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl border pointer-events-auto w-auto max-w-sm
+                ${t.type === 'success' ? 'bg-green-50/95 border-green-200/50 text-green-800' : ''}
+                ${t.type === 'error' ? 'bg-red-50/95 border-red-200/50 text-red-800' : ''}
+                ${t.type === 'info' ? 'bg-lavender-soft/95 border-lavender-deep/30 text-deepPlum' : ''}
               `}
             >
-              {t.type === 'success' && <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />}
-              {t.type === 'error' && <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />}
+              {t.type === 'success' && <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />}
+              {t.type === 'error' && <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />}
               <span className="text-sm font-medium leading-tight flex-1">{t.message}</span>
               <button 
                 onClick={() => setToasts((prev) => prev.filter((toast) => toast.id !== t.id))}
-                className="opacity-50 hover:opacity-100 transition-opacity"
+                className="opacity-50 hover:opacity-100 transition-opacity ml-1"
               >
                 <X className="w-4 h-4" />
               </button>
