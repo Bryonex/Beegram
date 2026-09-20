@@ -12,7 +12,7 @@ export function ChessGame({ onBack }: { onBack: () => void }) {
   const [game, setGame] = useState(new Chess())
   const [wins, setWins] = useState(0)
   const [highScore, setHighScore] = useState(0)
-  const [status, setStatus] = useState<string>('Your turn')
+  const [status, setStatus] = useState<string>('Your turn (White)')
   
   const { profile } = useCurrentProfile()
   const { success } = useToast()
@@ -45,10 +45,10 @@ export function ChessGame({ onBack }: { onBack: () => void }) {
     }
   }
 
-  function makeRandomMove() {
-    const possibleMoves = game.moves()
-    if (game.isGameOver() || game.isDraw() || possibleMoves.length === 0) {
-      handleGameOver()
+  function makeRandomMove(currentGame: Chess) {
+    const possibleMoves = currentGame.moves()
+    if (currentGame.isGameOver() || currentGame.isDraw() || possibleMoves.length === 0) {
+      handleGameOver(currentGame)
       return
     }
 
@@ -56,19 +56,19 @@ export function ChessGame({ onBack }: { onBack: () => void }) {
     const move = possibleMoves[randomIndex]
     
     // Safety check with safe move copy
-    const gameCopy = new Chess(game.fen())
+    const gameCopy = new Chess(currentGame.fen())
     gameCopy.move(move)
     setGame(gameCopy)
     
     if (gameCopy.isGameOver()) {
-      handleGameOver()
+      handleGameOver(gameCopy)
     } else {
       setStatus('Your turn')
     }
   }
 
-  function onDrop(sourceSquare: string, targetSquare: string) {
-    if (game.isGameOver()) return false
+  function onDrop(sourceSquare: string, targetSquare: string, piece?: string) {
+    if (game.isGameOver() || game.turn() !== 'w' || piece?.startsWith('b')) return false
 
     const gameCopy = new Chess(game.fen())
     const move = gameCopy.move({
@@ -82,17 +82,17 @@ export function ChessGame({ onBack }: { onBack: () => void }) {
     setGame(gameCopy)
 
     if (gameCopy.isGameOver()) {
-      handleGameOver(true)
+      handleGameOver(gameCopy, true)
     } else {
       setStatus('Bot is thinking...')
-      setTimeout(makeRandomMove, 400)
+      setTimeout(() => makeRandomMove(gameCopy), 400)
     }
     
     return true
   }
 
-  function handleGameOver(playerWon = false) {
-    if (game.isCheckmate()) {
+  function handleGameOver(currentGame: Chess, playerWon = false) {
+    if (currentGame.isCheckmate()) {
       if (playerWon) {
         setStatus('Checkmate! You win!')
         const newWins = wins + 1
@@ -101,7 +101,7 @@ export function ChessGame({ onBack }: { onBack: () => void }) {
       } else {
         setStatus('Checkmate! Bot wins!')
       }
-    } else if (game.isDraw()) {
+    } else if (currentGame.isDraw()) {
       setStatus('Draw!')
     } else {
       setStatus('Game Over!')
@@ -110,7 +110,7 @@ export function ChessGame({ onBack }: { onBack: () => void }) {
 
   function resetGame() {
     setGame(new Chess())
-    setStatus('Your turn')
+    setStatus('Your turn (White)')
   }
 
   return (
@@ -139,6 +139,7 @@ export function ChessGame({ onBack }: { onBack: () => void }) {
         <div className="text-sm font-medium font-sans px-4 py-2 bg-white/40 rounded-full text-[#4A3219] shadow-sm">
           {status}
         </div>
+        <div className="text-xs text-[#4A3219]/70 -mt-4">You are White • Bot is Black • Move the white pieces first</div>
 
         <div className="w-full max-w-[400px] aspect-square rounded-sm overflow-hidden shadow-2xl border-4 border-[#4A3219]">
           <ChessboardAny 

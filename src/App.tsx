@@ -14,6 +14,7 @@ import Garden from './pages/Garden'
 import Games from './pages/Games'
 import Compass from './pages/Compass'
 import NotFound from './pages/NotFound'
+import Notifications from './pages/Notifications'
 // Placeholders no longer needed for these routes
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
           <Route path="/games" element={<Games />} />
           <Route path="/garden" element={<Garden />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/notifications" element={<Notifications />} />
         </Route>
         
         <Route path="*" element={<NotFound />} />

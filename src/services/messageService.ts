@@ -9,9 +9,7 @@ import type {
   VoiceNoteInsert,
   Buzz,
   BuzzInsert,
-  AppNotificationInsert,
-  ChatReaction,
-  ChatReactionInsert
+  AppNotificationInsert
 } from '../types/messages'
 import { notificationService } from './notificationService'
 
@@ -242,14 +240,16 @@ export const messageService = {
 
     if (existing) {
       // Remove
-      await (supabase as any).from('chat_reactions').delete().eq('id', existing.id)
+      const { error } = await (supabase as any).from('chat_reactions').delete().eq('id', existing.id)
+      if (error) throw error
     } else {
       // Add
-      await (supabase as any).from('chat_reactions').insert({
+      const { error } = await (supabase as any).from('chat_reactions').insert({
         message_id: messageId,
         user_id: userId,
         emoji
       })
+      if (error) throw error
     }
   }
 }

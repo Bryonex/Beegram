@@ -15,6 +15,19 @@ export interface AppNotification {
 }
 
 export const notificationService = {
+  async getNotifications(recipientId: string): Promise<AppNotification[]> {
+    const { data, error } = await (supabase as any)
+      .from('notifications')
+      .select('id, relationship_id, recipient_id, sender_id, type, title, body, message, created_at, read_at')
+      .eq('recipient_id', recipientId)
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return (data || []).map((notification: AppNotification & { message?: string }) => ({
+      ...notification,
+      body: notification.body || notification.message || undefined,
+    }))
+  },
+
   async getPartnerId(relationshipId: string, userId: string): Promise<string | null> {
     const { data, error } = await (supabase as any)
       .from('profiles')
@@ -76,5 +89,14 @@ export const notificationService = {
       .eq('id', notificationId)
     
     if (error) console.error('Failed to mark notification as read', error)
+  },
+
+  async markAllAsRead(recipientId: string) {
+    const { error } = await (supabase as any)
+      .from('notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('recipient_id', recipientId)
+      .is('read_at', null)
+    if (error) throw error
   }
 }

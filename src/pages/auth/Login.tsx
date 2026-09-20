@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, KeyRound, UserRound } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import heroImg from '../../assets/hero.png'
@@ -116,28 +116,26 @@ export function Login() {
             </motion.div>
           </motion.div>
           <h1 className="text-3xl font-serif text-deepPlum mb-2">Beegram</h1>
-          <p className="text-deepPlum/60 text-sm font-sans italic">A little place that belongs to us</p>
+          <p className="text-deepPlum/60 text-sm font-sans italic">🔑 Enter our private space 🔒</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="mb-2">
-            <label className="block text-[10px] font-bold text-deepPlum/70 uppercase tracking-widest mb-1.5 px-1">
-              Your Beegram Name
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
-              autoComplete="username"
-              required
-              className="w-full px-5 py-3.5 bg-white/70 border border-lavender-mist/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-lavender-soft/50 focus:bg-white text-deepPlum placeholder-deepPlum/40 transition-all shadow-sm backdrop-blur-sm"
-            />
-            <p className="text-[10px] text-deepPlum/50 italic mt-1.5 px-1">
-              the name you use to enter our little world
-            </p>
+            <div className="relative">
+              <UserRound className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-deepPlum/70" />
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Username"
+                autoComplete="username"
+                required
+                className="w-full pl-14 pr-5 py-4 bg-white/70 border border-lavender-mist/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-lavender-soft/50 focus:bg-white text-deepPlum placeholder-deepPlum/40 transition-all shadow-sm backdrop-blur-sm"
+              />
+            </div>
           </div>
           <div className="relative">
+            <KeyRound className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-deepPlum/70" />
             <input
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -145,7 +143,7 @@ export function Login() {
               placeholder="Password"
               autoComplete="current-password"
               required
-              className="w-full pl-5 pr-12 py-3.5 bg-white/70 border border-lavender-mist/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-lavender-soft/50 focus:bg-white text-deepPlum placeholder-deepPlum/40 transition-all shadow-sm backdrop-blur-sm"
+              className="w-full pl-14 pr-12 py-4 bg-white/70 border border-lavender-mist/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-lavender-soft/50 focus:bg-white text-deepPlum placeholder-deepPlum/40 transition-all shadow-sm backdrop-blur-sm"
             />
             <button
               type="button"
@@ -172,7 +170,7 @@ export function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 mt-2 bg-lavender-dark text-white rounded-2xl font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-md flex items-center justify-center gap-2"
+            className="w-full py-4 mt-2 bg-gradient-to-r from-[#4A3219] to-lavender-dark text-white rounded-2xl font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-md flex items-center justify-center gap-2"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

@@ -244,7 +244,8 @@ export const momentService = {
 
     // Delete the media file
     if (moment.media_url) {
-      await supabase.storage.from('moments').remove([moment.media_url])
+      const { error: storageError } = await supabase.storage.from('moments').remove([moment.media_url])
+      if (storageError) throw storageError
     }
 
     // Delete the moment (cascades to comments/reactions via DB constraints)
