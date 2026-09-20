@@ -118,7 +118,7 @@ export default function Moments() {
               <MomentCard 
                 key={moment.id} 
                 moment={moment} 
-                onDelete={(id) => setMoments(prev => prev.filter(m => m.id !== id))}
+                onDelete={() => void loadMoments()}
               />
             ))
           )}

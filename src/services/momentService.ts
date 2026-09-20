@@ -257,7 +257,11 @@ export const momentService = {
 
     if (moment.media_url) {
       const { error: storageError } = await supabase.storage.from('moments').remove([moment.media_url])
-      if (storageError) throw storageError
+      if (storageError) {
+        // The row is already permanently deleted. Keep the user-facing result
+        // accurate while leaving a diagnostic for a missing storage policy.
+        console.error('Moment deleted but media cleanup failed:', storageError)
+      }
     }
   },
 

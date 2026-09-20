@@ -69,7 +69,7 @@ export function MomentCard({ moment: initialMoment, onDelete }: Props) {
       if (onDelete) onDelete(moment.id)
     } catch (err) {
       console.error('Failed to delete moment', err)
-      error('Could not delete moment')
+      error("Couldn't delete this moment")
     } finally {
       setIsDeleting(false)
       setMenuOpen(false)
